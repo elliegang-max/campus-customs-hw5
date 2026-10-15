@@ -16,6 +16,7 @@ hw5/
 ├── .gitignore
 ├── README.md
 ├── mcp_server/         # FastMCP server — every agent's only route to the db
+│   ├── README.md       # what it is for, which db, and the three tools
 │   ├── server.py       # the tools
 │   ├── queries.py      # the SQL behind them
 │   └── db.py           # connections (reads open read-only)

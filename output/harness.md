@@ -261,3 +261,25 @@ needed a model to work out.
 Still to come, in later problems: paying an invoice and paying rent (both behind
 human approval, both refusing to overdraw), resolving a ticket, and drafting
 replies that stay on the board.
+
+### 2.7 Tool → table → ticket
+
+Which tables each tool reads, and which ticket it unlocks. All three read
+`desk` first, because every date judgement is made against `desk.date_today`.
+
+| Tool | Tables it reads | Unlocks | Why it is the right tool for that ticket |
+|---|---|---|---|
+| `list_tickets` | `desk`, `tickets` | **101, 102, 103** | It is the only way onto the board at all — nothing can be worked until the agent knows which tickets are open and what the shop's date is. |
+| `get_ticket` | `desk`, `tickets`, `inventory`, `pricing`, `vendors`, `invoices`, `leases`, `cash_accounts` | **102** (and the stock and money side of 101 and 103) | A ticket's meaning lives in the tables it links to, and resolving those links in one call is what turns "Rent due" into 2400.00 due in 2 days against a 3400.00 balance. |
+| `get_vendor_status` | `desk`, `vendors`, `invoices` | **101, 103** | Both tickets are short of stock and can only be filled by a restock, so the question that decides them is whether the vendor will ship — and the answer is no while invoice #501 is open. |
+
+Read down the *Unlocks* column and the shape of the board shows up: ticket 102
+is answered by reading the shop's own records, while 101 and 103 both depend on
+a vendor who is refusing to ship. That is why `get_vendor_status` earns a tool
+of its own rather than being folded into `get_ticket` — it answers a question
+about a *vendor*, and the same answer gates two different tickets.
+
+A gap worth naming: ticket 103 needs a discount decision, and these three tools
+deliberately stop at the facts it rests on (`unit_cost` 22.00, `list_price`
+58.00, 8 of 20 in stock). Setting the price is a judgement a human should sign
+off on, so no tool here offers to make it.

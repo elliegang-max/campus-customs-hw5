@@ -181,3 +181,23 @@ read-only so a SELECT-only tool cannot write even by accident. The three tools
 are `list_tickets`, `get_ticket`, and `get_vendor_status` — one per question the
 agent must ask about any ticket. Unknown ids raise and list the ids that do
 exist, so a miss can never look like an empty result worth filling in.
+
+**Follow-up prompt** — 2026-10-14 _(the server existed but nothing tied each
+tool to the ticket it exists to unlock)_
+
+> In output/harness.md, list each of the three MCP tools with the table it
+> reads, which ticket it helps unlock (101, 102, or 103), and one sentence on
+> why it's the right tool for that ticket. Also add a short mcp_server/README.md
+> explaining what the server is for, which database file it uses, and the three
+> tools.
+
+**What Claude did.** Added section 2.7 to the harness as a tool → tables →
+ticket table, with the tables read checked against the SQL in `queries.py`
+rather than from memory. Reading down the *Unlocks* column makes the shape of
+the board visible: ticket 102 is answered out of the shop's own records, while
+101 and 103 both wait on a vendor who will not ship — which is the argument for
+`get_vendor_status` being its own tool instead of part of `get_ticket`. It also
+noted the deliberate gap: no tool sets the discount ticket 103 asks for, since
+that is a human judgement. `mcp_server/README.md` covers the same ground for
+someone opening the folder cold — what the server is for, the working-copy
+versus original split, and the three tools.
