@@ -201,3 +201,22 @@ noted the deliberate gap: no tool sets the discount ticket 103 asks for, since
 that is a human judgement. `mcp_server/README.md` covers the same ground for
 someone opening the folder cold — what the server is for, the working-copy
 versus original split, and the three tools.
+
+**Follow-up prompt** — 2026-10-14 _(the server was written but nothing could
+call it)_
+
+> Add my MCP server in mcp_server/ to this project so you can call its tools.
+> Save the connection JSON in .mcp.json at the project root.
+
+**What Claude did.** Created the venv and installed `fastmcp` 4.1.0 (nothing had
+been installed until now), then wrote `.mcp.json` pointing at
+`./.venv/bin/python -m mcp_server.server`. It dropped its own first draft of the
+config: that version passed `CAMPUS_CUSTOMS_DB` as a relative path, which would
+break whenever the server was launched from another directory, and `db.py`
+already resolves the database from its own file location. Before handing it
+over, it ran the server the way a client does — as a subprocess over stdio —
+and confirmed all three tools are advertised, that the figures match the
+database, and that a raise inside a tool reaches the caller as a readable error
+rather than an empty result. Claude Code picks up a new `.mcp.json` when the
+project is approved and reloaded, so the tools appear in the next session
+rather than this one.

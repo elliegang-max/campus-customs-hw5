@@ -9,6 +9,7 @@ in `hw3/` and `hw4/`.
 
 ```
 hw5/
+├── .mcp.json           # MCP connection config — registers the server with Claude
 ├── RULES.md            # the shop rules every agent and tool must obey
 ├── AI_prompts.md       # log of the prompts used to build this
 ├── requirements.txt    # Python deps
@@ -54,3 +55,6 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+The venv is required before the MCP server can be connected: `.mcp.json` runs
+`./.venv/bin/python -m mcp_server.server`, and `.venv/` is not committed.

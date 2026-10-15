@@ -77,6 +77,27 @@ pip install -r requirements.txt
 python -m mcp_server.server
 ```
 
-Starts on stdio transport. Not wired to an agent yet — the write tools (paying
-an invoice, paying rent, resolving a ticket), each behind human approval and
-each refusing to overdraw the account, come in later problems.
+Starts on stdio transport.
+
+It is registered with Claude through `.mcp.json` at the project root:
+
+```json
+{
+  "mcpServers": {
+    "campus-customs": {
+      "command": "./.venv/bin/python",
+      "args": ["-m", "mcp_server.server"]
+    }
+  }
+}
+```
+
+The command is relative to the project root, which is where the client launches
+it from. No `env` block is needed: `db.py` resolves the database from its own
+file location, so the working copy is found whatever directory the server is
+started in. Create the venv first (`.venv/` is not committed) — without it the
+command does not exist and the server will fail to start.
+
+The write tools (paying an invoice, paying rent, resolving a ticket), each
+behind human approval and each refusing to overdraw the account, come in later
+problems.

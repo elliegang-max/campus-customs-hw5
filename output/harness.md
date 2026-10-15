@@ -283,3 +283,44 @@ A gap worth naming: ticket 103 needs a discount decision, and these three tools
 deliberately stop at the facts it rests on (`unit_cost` 22.00, `list_price`
 58.00, 8 of 20 in stock). Setting the price is a judgement a human should sign
 off on, so no tool here offers to make it.
+
+### 2.8 Connecting the server
+
+`.mcp.json` at the project root registers the server with Claude:
+
+```json
+{
+  "mcpServers": {
+    "campus-customs": {
+      "command": "./.venv/bin/python",
+      "args": ["-m", "mcp_server.server"]
+    }
+  }
+}
+```
+
+Three decisions worth recording:
+
+- **The venv's Python, not the system one.** `fastmcp` lives in `.venv`, and the
+  system Python cannot import it. `.venv/` is not committed, so the venv has to
+  exist before the server can start.
+- **A relative command.** The client launches the server from the project root,
+  so `./.venv/bin/python` keeps the file portable between machines in a way an
+  absolute path would not.
+- **No `env` block.** The first draft passed `CAMPUS_CUSTOMS_DB` as a relative
+  path, which would have broken the moment the server was launched from a
+  different directory. `db.py` already resolves the database from its own file
+  location, so the default is strictly more robust than overriding it.
+
+Verified before wiring it up, by running the server as a client would — as a
+subprocess over stdio, not just imported in-process:
+
+| Check | Result |
+|---|---|
+| Tools advertised | `list_tickets`, `get_ticket`, `get_vendor_status` |
+| `get_vendor_status(1)` | `can_ship` false — "vendor has open unpaid invoice(s): #501 (840.00)" |
+| `get_ticket(103)` | `short_by` 12, cash 3400.00 |
+| `get_ticket(999)` | error reaches the client intact: "no ticket with id 999; tickets on the board: [101, 102, 103]" |
+
+That last row is the one worth checking: a raise inside a tool has to arrive at
+the agent as an error it can read, not as a silent empty result.
