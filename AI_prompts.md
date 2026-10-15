@@ -361,3 +361,33 @@ The approval loop then ran clean: pass 1 proposed two payments and paid nothing,
 a human approved the invoice only, and pass 2 paid exactly that one — 3400.00 →
 2560.00 — then refused the same payment on the retry and left the unapproved
 rent alone.
+
+---
+
+## Problem 4 — The desk page
+
+**Prompt** — 2026-10-15
+
+> Build output/desk_tickets.html, a self-contained page I can double-click
+> open, with one tab per ticket (101, 102, 103) plus empty Cash and Reflection
+> tabs marked "coming later". On each ticket tab, fill in an Expected section
+> describing what the agent team should do for that ticket, based on the data in
+> data/campus_customs_new.db, and leave an empty Actual section for me to fill
+> in after I run the agents.
+
+**What Claude did.** Wrote `scripts/build_desk_page.py`, which reads the
+database and generates the page, rather than typing the figures into HTML by
+hand — so the Expected sections can be regenerated whenever the board changes
+and cannot drift from the data. It reset the working copy first: the database
+still held the state left by the approval demo, with invoice #501 marked paid
+and 2560.00 in checking, and a page built from that would have described a board
+that no longer needed the payment it was explaining. After generating, it
+checked all eleven figures on the page back against the database.
+
+Each ticket tab carries the linked rows, a step-by-step Expected section, an "It
+should not" list naming the specific wrong move that ticket tempts an agent into
+— promising the 2026-09-05 ship date on 101, quoting a discount on 103 — and an
+empty Actual box that keeps what is typed in it in browser storage. Cash and
+Reflection are present and marked "coming later". The page has no external
+references of any kind. Its structure was verified; Chrome was not reachable
+from the session, so it has not been looked at rendered.

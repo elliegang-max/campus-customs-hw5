@@ -688,3 +688,57 @@ says "call this once" is a request, while a tool that refuses is a guarantee.
   proposal instead of stacking duplicates. This one mattered: nine identical
   approvals is a trap for whoever is approving, and approving two of them is two
   payments.
+
+---
+
+## 5. The desk page
+
+`output/desk_tickets.html` — one file, no external anything, double-click to
+open. Five tabs: one per ticket, plus **Cash** and **Reflection** marked
+*coming later*.
+
+### 5.1 Generated from the database, not typed
+
+`scripts/build_desk_page.py` reads `data/campus_customs_new.db` and writes the
+page, so every figure on it traces to a row rather than to someone's memory of
+one. Rebuild it after a reset with:
+
+```bash
+./scripts/reset_db.sh
+./.venv/bin/python scripts/build_desk_page.py
+```
+
+The working copy was reset first, deliberately: the **Expected** sections
+describe what the team should do with a *fresh* board. Had the page been built
+from the state left by §4.5, it would have claimed invoice #501 was still open
+while the database said `paid`.
+
+Checked after generating — all eleven figures on the page match the database:
+the shop date, the balance, the invoice amount and due date, the rent and its
+due date, both running balances (2560.00 and 160.00), the 264.00 restock, the
+zero tee stock, and the 12-unit hoodie shortfall.
+
+### 5.2 What is on a ticket tab
+
+| Section | Holds |
+|---|---|
+| **What the database says** | the ticket's own row plus the rows it links to |
+| **Expected** | what the team should do, step by step, with the figures each step should produce |
+| **It should not** | the specific wrong moves this ticket invites — promising 2026-09-05 on 101, quoting a discount on 103 |
+| **Actual** | empty, for filling in after a run |
+
+The "It should not" lists are the useful half. Each one names a mistake the
+data actively tempts an agent into: `get_vendor_status` *returns*
+`earliest_ship_date_if_ordered_today`, so promising that date on ticket 101 is
+one copy-paste away, and only the `can_ship: false` beside it says otherwise.
+
+The Actual boxes are plain textareas that keep what is typed in them in the
+browser's local storage, so closing the page does not lose the notes. Nothing
+leaves the file — there is no network call in it.
+
+### 5.3 Not visually checked
+
+The page's structure was verified — five tabs, five panels, three Expected and
+three Actual sections, the Actual boxes empty, zero external references — but
+Chrome was not reachable from this session, so **nobody has looked at it
+rendered**. If something is off visually, that is why.
