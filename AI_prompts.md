@@ -4,9 +4,9 @@ A log of the prompts I typed into Claude while working on this assignment, in my
 own words, organised by problem.
 
 **Convention:** one section per problem. Each section records the problem number
-and title, at least one prompt I typed, and — where the first prompt did not get
-me what I needed — the follow-up prompt, with a one-line note on what was
-lacking. A short note on what Claude did follows each prompt. Sections are filled
+and title, the date I typed each prompt, at least one prompt I typed, and —
+where the first prompt did not get me what I needed — the follow-up prompt, with
+a one-line note on what was lacking. A short note on what Claude did follows each prompt. Sections are filled
 in as the assignment progresses; nothing is rewritten after the fact.
 
 ---
@@ -23,7 +23,7 @@ in as the assignment progresses; nothing is rewritten after the fact.
 No assignment brief existed anywhere under `AI Foundation/`, so it asked for the
 hw5 problems rather than guessing at application code.
 
-**Follow-up prompt** _(the first prompt only said where to work, not what to do —
+**Follow-up prompt** — 2026-10-14 _(the first prompt only said where to work, not what to do —
 the data still had to be unpacked)_ _(with `~/Desktop/data-2.zip` attached)_
 
 > unzip so you have data/campus_customs.db
@@ -37,7 +37,7 @@ size rows), `users` (3), `chat_messages` (22) — and every `image_file_path` in
 the catalogue resolves to a file in `data/products/` (102 images). Added
 `data/` to `.gitignore` so the pack stays local, matching hw4.
 
-**Follow-up prompt** _(the data pack was in place, but nothing said which copy of
+**Follow-up prompt** — 2026-10-14 _(the data pack was in place, but nothing said which copy of
 the database the tools should write to)_
 
 > That file is the original shop database. Tables include desk, tickets,
@@ -57,7 +57,7 @@ the hw4 storefront schema — and none of the `desk` / `tickets` / `vendors` /
 `leases` / `cash_accounts` / `payments` / `invoices` tables described above, so
 the hw5 data pack still has to be supplied.
 
-**Follow-up prompt** _(the rules of the shop, given before the problem list)_
+**Follow-up prompt** — 2026-10-14 _(the rules of the shop, given before the problem list)_
 
 > Rules of this shop
 >
@@ -86,3 +86,17 @@ checked where the Portkey credentials come from: `~/.config/ai-keys/keys.env`
 already has both `PORTKEY_API_KEY` and `PORTKEY_BASE_URL`, so no local `.env` is
 needed, and recorded that resolution order in `RULES.md`. No code yet — the hw5
 data pack and the problem list are still to come.
+
+**Follow-up prompt** — 2026-10-14 _(asking for the log that was already being
+kept — the earlier prompts had not said to keep one, so this confirmed the
+convention rather than starting it)_
+
+> Create AI_prompts.md in the project root. Keep it updated with when i give you
+> prompts as we work
+
+**What Claude did.** The file already existed at the project root, created with
+the scaffold and carrying all four prompts up to this point, so nothing was
+recreated. It dated every entry (the follow-ups had carried only the note on
+what was lacking, not the date) and wrote the date into the convention at the
+top. From here each prompt is appended as it arrives, with its date and a note
+on what followed; nothing earlier is rewritten.
