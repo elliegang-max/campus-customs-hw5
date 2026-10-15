@@ -358,3 +358,98 @@ Two things the run also establishes:
   no `fastmcp`, and the server died at startup with nothing but "Connection
   closed" at the client. The fix is to make the path absolute without resolving
   symlinks. Worth remembering for any venv-based MCP command.
+
+---
+
+## 3. The agent team
+
+Five PydanticAI agents — **Boss, Inventory, Accounting, Facilities, Customer
+Service** — all on `gpt-6-luna` through Portkey, all reaching the shop only
+through the MCP tools from section 2.
+
+### 3.1 Who does what, and who may ask whom
+
+```
+          Boss ─┬─> Inventory ◂──────────────┐
+                ├─> Accounting               │
+                ├─> Facilities               │
+                └─> Customer Service ────────┘
+```
+
+Delegation runs one way. The Boss may ask any specialist; Customer Service may
+ask Inventory; nothing asks the Boss. That is deliberate — a cycle between two
+agents is a bill that grows until a request limit stops it, and there is no
+question here that needs one.
+
+| Agent | Owns | May delegate to |
+|---|---|---|
+| **Boss** | triage, deciding, the order things happen in | all four |
+| **Inventory** | stock, shortfalls, whether a vendor can resupply | — |
+| **Accounting** | cash, invoices, proposing payments for approval | — |
+| **Facilities** | leases, landlords, rent | — |
+| **Customer Service** | the reply to the requester | Inventory |
+
+The one sideways edge exists for a reason: a reply written from the ticket
+alone is exactly where invented delivery dates come from, so Customer Service
+has to be able to ask what is actually true before it promises anything.
+
+### 3.2 One place per decision
+
+- **One model factory.** `settings.model()` is the only way to get a client, and
+  it raises on any name but `gpt-6-luna`. An agent cannot quietly use something
+  else, because there is no other constructor to call.
+- **One agent builder.** `base.build_agent()` gives every agent the same four
+  things: the model, the shared MCP toolset, a prompt file, and a typed output.
+- **One copy of the house rules.** `prompts/_shared.md` holds the seven rules
+  that bind every agent — the shop's date, never invent, never pay, never
+  overdraw, never contact anyone, the vendor shipping block, and say so when you
+  cannot answer. Each agent prompt splices it in at `{SHARED_RULES}`, so a rule
+  cannot drift between agents.
+- **One request budget.** Delegated runs are passed `ctx.usage`, so the team
+  shares one budget rather than one per agent, capped at 60 requests a run.
+
+### 3.3 The types the team passes around
+
+`backend/models.py`. Each specialist returns a typed result rather than prose,
+which is what makes the Boss's job assembly instead of interpretation:
+`StockAssessment`, `MoneyAssessment`, `RentAssessment`, `DraftReply`, and the
+Boss's own `TicketOutcome` / `BoardReview`.
+
+The important one is **`ApprovalRequest`**. A payment is not an action in this
+system, it is a *proposal*: payee, amount, `cash_before`, `cash_after`, what it
+unblocks, and `approved` left null for a human to set. No agent has a tool that
+moves money, so the type is the only way a payment can be expressed at all.
+`DraftReply.sent` is typed `Literal[False]` for the same reason — the schema
+itself says a draft stays on the board.
+
+### 3.4 Two things the live run taught
+
+**The gateway refuses function tools with reasoning effort on.** The first run
+died on a 400: *"Function tools with reasoning_effort are not supported for
+gpt-6-luna-global in /v1/chat/completions"*. Every agent on this team uses
+tools, so `openai_reasoning_effort="none"` is set once in `base.py` rather than
+remembered at five call sites.
+
+**The first draft reply leaked the shop's books.** Working ticket 102, Customer
+Service wrote to the *landlord*: "The checking balance is $3,400 ... would leave
+$1,000." Every figure was true and came from the database, and it still should
+not have been written — rule 2 (never invent) does not imply rule "never
+disclose". The prompt now says cash balances, unit costs, and margins are
+internal; a landlord hears about their own lease and nothing else. Re-running
+the same ticket produced a draft with no internal figures in it.
+
+### 3.5 Live run — ticket 102
+
+`python -m backend.run_board --ticket 102`, against the untouched working copy:
+
+- Boss delegated to **facilities → accounting → customer_service**.
+- Facilities: Chapel Street shop, 2400.00, due 2026-09-02, **2 days**, not
+  overdue — all matching the `leases` row.
+- Accounting: affordable, `cash_before` 3400.00, `cash_after` 1000.00, raised as
+  an `ApprovalRequest` with `approved: null`.
+- Customer Service: a draft, `sent: false`, no internal figures.
+- `resolved: false`, `needs_human: true` — correct, since nothing is paid until
+  a person approves it.
+
+Nothing was written to the database: the tools are read-only, and the payment
+exists only as a proposal.

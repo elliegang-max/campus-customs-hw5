@@ -21,6 +21,15 @@ hw5/
 │   ├── server.py       # the tools
 │   ├── queries.py      # the SQL behind them
 │   └── db.py           # connections (reads open read-only)
+├── backend/            # the PydanticAI agent team
+│   ├── boss.py         # triage + delegation; review_board()
+│   ├── inventory.py  accounting.py  facilities.py  customer_service.py
+│   ├── base.py         # one builder: one model, the MCP tools, a typed output
+│   ├── settings.py     # the only place a model client is made (gpt-6-luna)
+│   ├── toolset.py      # the shared MCP toolset
+│   ├── models.py       # the types the team passes around
+│   ├── run_board.py    # CLI: python -m backend.run_board
+│   └── prompts/        # one prompt per agent, plus _shared.md house rules
 ├── prompts/            # system / task prompts
 ├── scripts/reset_db.sh # restore the working db from the original
 ├── data/               # data pack (not committed)
@@ -40,6 +49,14 @@ To start the tickets over from scratch:
 
 ```bash
 ./scripts/reset_db.sh
+```
+
+## Running the team
+
+```bash
+./scripts/reset_db.sh                              # start from a clean board
+./.venv/bin/python -m backend.run_board            # the whole board
+./.venv/bin/python -m backend.run_board --ticket 102
 ```
 
 Nine tables — `desk`, `tickets`, `inventory`, `pricing`, `vendors`, `invoices`,

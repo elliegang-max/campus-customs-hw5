@@ -5,7 +5,8 @@
 # the standalone one first and falls back to the copy in the official SDK.
 fastmcp
 
-# Agents (every call goes through Portkey, model gpt-6-luna only).
+# The agent team. The [mcp] extra is what lets the agents use the shop's tools.
+pydantic-ai-slim[openai,mcp]
 openai
 pydantic
 python-dotenv

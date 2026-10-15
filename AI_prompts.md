@@ -241,3 +241,36 @@ making the relative command absolute with `Path.resolve()` followed
 after, showing the read-only tools left it untouched. Note the tools were called
 through this client rather than through Claude's own MCP connection, which had
 not picked up `.mcp.json` yet in this session.
+
+---
+
+## Problem 2 — The agent team
+
+**Prompt** — 2026-10-14
+
+> Build the Campus Customs agent team with PydanticAI: Boss, Inventory,
+> Accounting, Facilities, and Customer Service. Put one prompt file per agent in
+> backend/prompts/, data types in backend/models.py, and the agent files under
+> backend/. Let the agents delegate to each other, and have every agent use the
+> MCP tools. Use my PORTKEY_API_KEY and only gpt-6-luna.
+
+**What Claude did.** Built the five agents on one shared MCP toolset, with
+delegation running one way only — Boss to any specialist, Customer Service to
+Inventory, nothing back to the Boss — so the team cannot talk in circles. Three
+decisions were each made in exactly one place: `settings.model()` is the only
+way to get a client and raises on any name but `gpt-6-luna`;
+`base.build_agent()` gives every agent the same model, tools, prompt, and typed
+output; and `prompts/_shared.md` holds the seven house rules that every prompt
+splices in, so a rule cannot drift between agents. `models.py` makes a payment a
+*proposal* rather than an action — `ApprovalRequest` carries `cash_before`,
+`cash_after`, and an `approved` field left null for a human, and
+`DraftReply.sent` is typed `Literal[False]`.
+
+Two things only came out of running it. The first live run failed with a 400:
+the gateway refuses function tools unless reasoning effort is off for
+`gpt-6-luna`, so `openai_reasoning_effort="none"` is now set once in `base.py`.
+Then the run succeeded on ticket 102 with correct figures — but the draft reply
+told the *landlord* the shop's checking balance. Every number in it was true,
+which is the point: "never invent" does not imply "never disclose". The Customer
+Service prompt now rules the books internal, and a re-run produced a clean
+draft.
