@@ -1216,3 +1216,39 @@ striped in each agent's colour, and receipt slips with torn edges reading
 
 The one thing a still image cannot show is the balance counting down, which only
 happens at the moment a payment is approved.
+
+---
+
+## 11. The Reflection tab
+
+`desk_tickets.html` now has all five tabs filled: three tickets, Cash, and
+Reflection. The reflection is the owner's own — how they would judge each
+ticket, Actual against Expected, where one agent would have done, and what this
+team could and could not take on next.
+
+Underneath it sits **Checked against the record**, generated from
+`run_actuals.json` rather than typed, and kept separate from the reflection
+rather than edited into it. The reflection says what its author thought at the
+time; the check says what the trail shows. Three things did not match:
+
+- **"Boss went to Customer Service before anyone had the facts" (ticket 101).**
+  The trail has `boss → inventory` (seq 150), `boss → accounting` (152),
+  `boss → customer_service` (162), and only then Customer Service checking back
+  with Inventory. The reading came from the screenshot, where the feed is
+  scrolled to its end — so the visible part starts mid-run, after the routing
+  had already happened. A fair conclusion from what was on screen, and wrong.
+- **"Accounting proposed the same $840 twice."** True, and worth keeping: the
+  two proposals were in *different runs*, the second created because the first
+  had already been approved and the duplicate check only looked for a pending
+  one. Fixed in §10.2, with the stale row declined rather than deleted.
+- **"Ticket 103 hasn't run."** It ran three times, in the same shape as 101, and
+  never proposed a payment — which is correct, since the 264.00 shortfall is
+  arithmetic off the pricing table rather than a bill, with 160.00 left.
+
+The 102 reading holds up exactly: Facilities, then Accounting, then the draft,
+with Inventory never touching it.
+
+That mismatch is itself the most useful thing on the tab. Two of the three came
+from reading a screenshot instead of the record — which is the argument for
+having an audit trail at all, and for the Actual sections being generated from
+it rather than remembered.

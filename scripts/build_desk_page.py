@@ -537,6 +537,155 @@ def cash_section() -> str:
 """
 
 
+# --- the reflection tab ----------------------------------------------------
+
+REFLECTION_SECTIONS = [
+    (
+        "1. How I’d evaluate the agents on each ticket",
+        """<p>I look at four things: did the numbers come from the database, did the
+        agents follow the shop rules, did Boss only call the agents it needed, and
+        would a real owner be happy with the result. I care most about the first two,
+        because the agents are working with real money and real customers.</p>
+
+        <p><strong>Ticket 101 (Bulldog tee).</strong> The facts held up. Bulldog Print
+        Co has a 5-day lead time, and 2026-08-31 plus 5 days is the 2026-09-05 date in
+        the draft. Accounting also worked out that overdue invoice 501 was blocking the
+        restock. What worries me is the routing. Boss went to Customer Service before
+        anyone had the facts, and Accounting proposed the same $840 twice. The ticket is
+        also still open, so I can’t call it finished.</p>
+
+        <p><strong>Ticket 102 (Rent due).</strong> This one looks clean. It’s resolved,
+        and Accounting proposed $2,400 for the Chapel Street rent due 2026-09-02, noted
+        there was enough cash, and waited for my approval. I don’t see any wasted steps
+        in the screenshot.</p>
+
+        <p><strong>Ticket 103 (Bulk hoodie discount).</strong> It hasn’t run, so there’s
+        nothing to evaluate yet.</p>""",
+    ),
+    (
+        "2. Actual vs. Expected",
+        """<p>On <strong>101</strong>, I expected Boss to call Inventory first, then
+        Accounting about the vendor invoice, then Customer Service for the draft. Instead
+        Boss went to Customer Service first, and Customer Service had to ask Inventory for
+        the facts. The right agents showed up in the wrong order, which wasted steps. The
+        duplicate $840 proposal wasn’t in my plan at all.</p>
+
+        <p>On <strong>102</strong>, I expected Facilities, then Accounting, with Inventory
+        and Customer Service left out. That’s what the screenshot looks like: a rent
+        payment from Accounting and no activity from the other two.</p>
+
+        <p>On <strong>103</strong>, I expect Accounting first to check the margin on 20
+        navy hoodies in size M, then Inventory to confirm stock, then Customer Service for
+        the reply. I’ll compare that after it runs.</p>""",
+    ),
+    (
+        "3. What would’ve been simpler as one agent",
+        """<p>Honestly, most of it. All three tickets use the same database through the
+        same MCP server, and each one is a few lookups followed by a draft or a payment
+        proposal. One agent with the same tools could do that in one loop. The 101 mess is
+        a good example: Customer Service had to pass a question to Inventory, and a single
+        agent would have just looked up the stock itself.</p>
+
+        <p>What the team did buy me was separation of duties. Only Accounting touches
+        money, and Customer Service only drafts. That’s nice, but a single agent with a
+        pay tool that needs approval and refuses overdrafts would be about as safe.</p>""",
+    ),
+    (
+        "4. Three new problems this team could handle",
+        """<ul>
+          <li>A customer asks whether a size is in stock and when it could ship.
+          Inventory checks stock and lead time, and Customer Service drafts the answer.</li>
+          <li>A different vendor invoice goes overdue and blocks a restock. Accounting
+          checks the due date against today’s date and the cash balance, then prepares the
+          payment.</li>
+          <li>A lease or utility bill comes due. Facilities reads the lease and Accounting
+          prepares the payment.</li>
+        </ul>""",
+    ),
+    (
+        "5. Three new problems it couldn’t handle",
+        """<ul>
+          <li><strong>Deciding how much to reorder.</strong> The database has current
+          stock but no sales history. I’d add a sales table, a demand forecasting tool,
+          and a Planning agent.</li>
+          <li><strong>Running out of cash.</strong> The balance is $160 and the shop only
+          spends money, because no revenue is modeled. I’d need a tool to record customer
+          payments, a cash forecast tool, and a Collections agent to chase what’s
+          owed.</li>
+          <li><strong>Finding a cheaper vendor.</strong> The agents only know one vendor’s
+          lead time and can’t compare quotes or contact anyone. I’d add a vendor quote
+          tool, a send-message tool that needs human sign-off, and a Procurement agent
+          with limits on how far it can negotiate.</li>
+        </ul>""",
+    ),
+]
+
+
+def record_check() -> str:
+    """Where the reflection and the audit trail disagree.
+
+    Generated from `run_actuals.json`, not typed in, so it stays true if the
+    board is run again. Kept separate from the reflection above rather than
+    edited into it — the reflection is a record of what I thought at the time.
+    """
+    checks = []
+    for ticket_id in (101, 102, 103):
+        entry = RUN["tickets"].get(str(ticket_id))
+        if not entry:
+            continue
+        order = [f"{a} → {b}" for a, b in entry["delegations"]]
+        first = entry["delegations"][0][1] if entry["delegations"] else "—"
+        proposals = entry["tools"].get("propose_payment", 0)
+        checks.append(
+            (ticket_id, len(entry["runs"]), first, order, proposals, entry["final_status"])
+        )
+
+    rows = "".join(
+        f"<tr><td>#{tid}</td><td>{runs}</td><td><strong>{e(first)}</strong></td>"
+        f"<td class='tbl'>{' · '.join(e(o) for o in order)}</td>"
+        f"<td>{props}</td><td>{e(status)}</td></tr>"
+        for tid, runs, first, order, props, status in checks
+    )
+
+    return f"""
+  <h3 class="actual">Checked against the record</h3>
+  <p class="lede">Notes from the audit trail, kept separate from the reflection above —
+  the reflection says what I thought when I wrote it, and this says what the trail
+  shows. Three things do not match.</p>
+
+  <table class="tools">
+    <thead><tr><th>Ticket</th><th>Runs</th><th>Boss called first</th>
+      <th>Delegations, in order</th><th><code>propose_payment</code></th><th>Status</th></tr></thead>
+    <tbody>{rows}</tbody>
+  </table>
+
+  <ol class="steps">
+    <li><strong>On 101, Boss did call Inventory first.</strong> The trail has
+      <code>boss → inventory</code>, then <code>boss → accounting</code>, then
+      <code>boss → customer_service</code>, and only then Customer Service asking
+      Inventory to confirm before writing. The feed in the screenshot is scrolled to
+      its end, so the visible part starts mid-run with Customer Service — the order
+      above it had already happened.</li>
+    <li><strong>The duplicate $840 is real, and it was across runs, not within
+      one.</strong> Accounting proposed it once in the first pass and again in the
+      second, because the first proposal had already been approved by then and the
+      duplicate check only looked for a <em>pending</em> one. That is fixed — an
+      approved-but-unspent proposal now counts as live — and the stale row was
+      declined rather than deleted, so it reads DECLINED on the board.</li>
+    <li><strong>Ticket 103 did run — three times.</strong> It took the same shape as
+      101: Inventory, then Accounting, then Customer Service, with Customer Service
+      checking back with Inventory. No payment was ever proposed for it, which is the
+      right answer: the 12-unit shortfall is {money(restock_cost)} of arithmetic off
+      the pricing table, not a bill, and only {money(AFTER_RENT)} is left. It is still
+      open because the discount is a human’s call and the restock cannot be afforded —
+      so the section 1 note, and the plan in section 2 to compare “after it runs”, can
+      both be settled from the Actual tab now.</li>
+  </ol>
+
+  <p class="lede">The 102 reading holds up exactly: Facilities, then Accounting, then
+  the draft — Inventory never touched it.</p>"""
+
+
 COMING = {
     "reflection": (
         "Reflection",
@@ -590,6 +739,20 @@ def ticket_panel(tab: dict) -> str:
 </section>"""
 
 
+def reflection_panel() -> str:
+    sections = "".join(
+        f"<h4 class='plain'>{e(title)}</h4>{body}" for title, body in REFLECTION_SECTIONS
+    )
+    return f"""
+<section class="panel" id="panel-reflection" role="tabpanel" aria-labelledby="tab-reflection" hidden>
+  <header class="panel-head">
+    <h2>Reflection</h2>
+  </header>
+  {sections}
+  {record_check()}
+</section>"""
+
+
 def cash_panel() -> str:
     return f"""
 <section class="panel" id="panel-cash" role="tabpanel" aria-labelledby="tab-cash" hidden>
@@ -619,17 +782,11 @@ buttons = "".join(
 ) + (
     "<button role='tab' id='tab-cash' aria-controls='panel-cash' aria-selected='false'>"
     "<span>Cash</span><small>the ledger</small></button>"
-) + "".join(
-    f"<button role='tab' id='tab-{k}' aria-controls='panel-{k}' aria-selected='false' "
-    f"class='is-later'><span>{COMING[k][0]}</span><small>coming later</small></button>"
-    for k in COMING
+    "<button role='tab' id='tab-reflection' aria-controls='panel-reflection' "
+    "aria-selected='false'><span>Reflection</span><small>what it taught</small></button>"
 )
 
-panels = (
-    "".join(ticket_panel(t) for t in TABS)
-    + cash_panel()
-    + "".join(coming_panel(k) for k in COMING)
-)
+panels = "".join(ticket_panel(t) for t in TABS) + cash_panel() + reflection_panel()
 
 HTML = f"""<!doctype html>
 <html lang="en">

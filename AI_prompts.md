@@ -662,3 +662,27 @@ Approve button on it. `propose_payment` now treats an approved-but-unspent
 proposal as live so the duplicate cannot be created, and the stale row was
 cleared through the proper path with `approve.py 3 --decline`, so it reads
 DECLINED rather than vanishing.
+
+**Follow-up prompt** — 2026-10-15 _(the last empty tab, with the reflection
+written out)_
+
+> Open output/desk_tickets.html and fill the Reflection tab. [five sections: how
+> I'd evaluate the agents on each ticket, Actual vs Expected, what would've been
+> simpler as one agent, three new problems this team could handle, three it
+> couldn't]
+
+**What Claude did.** Filled the tab with the reflection as written — it is the
+owner's own judgement and not Claude's to edit — and then checked its factual
+claims against the audit trail, because three of them disagree with it. On
+ticket 101 the Boss *did* call Inventory first (seq 150), before Accounting and
+well before Customer Service; the reading came from a screenshot whose feed is
+scrolled to the end, so the visible part starts mid-run. The duplicate $840 is
+real, but the two proposals were in different runs, the second created because
+the first had already been approved — the gap fixed in the previous problem. And
+ticket 103 had in fact run three times, taking the same shape as 101 and
+correctly proposing no payment at all.
+
+Rather than silently rewriting the reflection, those notes sit beneath it as
+**Checked against the record**, generated from `run_actuals.json` so they stay
+true if the board is run again. Two of the three mismatches came from reading a
+screenshot instead of the trail, which is the argument for keeping one.
