@@ -403,13 +403,141 @@ TAB_103 = {
     ]),
 }
 
+# --- the cash tab ----------------------------------------------------------
+
+
+def cash_section() -> str:
+    """Every dollar that left the account, tied to the ticket it belonged to.
+
+    Read from `payments` and `approvals` in the working copy, with the opening
+    balance taken from the untouched original — so the arithmetic on the page is
+    the database's own, and the closing figure is checked against it.
+    """
+    original = sqlite3.connect(
+        f"file:{ROOT / 'data' / 'campus_customs.db'}?mode=ro", uri=True
+    )
+    try:
+        opening = original.execute(
+            "SELECT balance FROM cash_accounts WHERE name='checking'"
+        ).fetchone()[0]
+        # The rent that was paid was the one due before the payment rolled the
+        # lease on, so take that date from the original too.
+        rent_was_due = original.execute(
+            "SELECT next_due FROM leases WHERE id=1"
+        ).fetchone()[0]
+    finally:
+        original.close()
+
+    payments = q("SELECT * FROM payments ORDER BY id")
+    approvals = {a["payment_id"]: a for a in q("SELECT * FROM approvals") if a["payment_id"]}
+    tickets = q("SELECT * FROM tickets ORDER BY id")
+    closing = one("SELECT balance FROM cash_accounts WHERE name='checking'")["balance"]
+
+    def ticket_for(payment: dict) -> dict | None:
+        """Which ticket a payment belongs to, from the ticket's own links."""
+        for ticket in tickets:
+            if payment["kind"] == "invoice" and ticket["invoice_id"] == payment["ref_id"]:
+                return ticket
+            if payment["kind"] == "rent" and ticket["lease_id"] == payment["ref_id"]:
+                return ticket
+        return None
+
+    rows = [
+        f"<tr class='cash-open'><td>—</td><td><strong>Starting balance</strong>"
+        f"<span class='cash-why'>after <code>./scripts/reset_db.sh</code></span></td>"
+        f"<td class='num'></td><td class='num'><strong>{money(opening)}</strong></td></tr>"
+    ]
+
+    running = opening
+    spent_by_ticket: dict[int, float] = {}
+    for payment in payments:
+        ticket = ticket_for(payment)
+        approval = approvals.get(payment["id"])
+        running = round(running - payment["amount"], 2)
+        if ticket:
+            spent_by_ticket[ticket["id"]] = round(
+                spent_by_ticket.get(ticket["id"], 0) + payment["amount"], 2
+            )
+        why = (
+            f"invoice #{payment['ref_id']} — {e(INVOICE['description'])}; the vendor "
+            "would not ship while it was open"
+            if payment["kind"] == "invoice"
+            else f"rent on lease #{payment['ref_id']}, {e(LEASE['space_name'])}, "
+            f"which was due {e(rent_was_due)}; paying it rolled the lease on to "
+            f"{e(LEASE['next_due'])}"
+        )
+        rows.append(
+            f"<tr><td class='cash-ticket'>#{ticket['id'] if ticket else '—'}</td>"
+            f"<td><strong>{e(payment['kind'])} payment</strong>"
+            f"<span class='cash-why'>{why}<br>approved by "
+            f"<strong>{e(approval['approved_by']) if approval else 'unknown'}</strong>, "
+            f"proposed by {e(approval['requested_by']) if approval else 'unknown'}</span></td>"
+            f"<td class='num out'>−{money(payment['amount'])}</td>"
+            f"<td class='num'>{money(running)}</td></tr>"
+        )
+
+    for ticket in tickets:
+        if ticket["id"] not in spent_by_ticket:
+            why = (
+                f"the {e(str(20 - 8))}-unit restock would cost {money(restock_cost)}, "
+                f"more than the {money(running)} left"
+                if ticket["id"] == 103
+                else "nothing was bought for this ticket"
+            )
+            rows.append(
+                f"<tr class='cash-none'><td class='cash-ticket'>#{ticket['id']}</td>"
+                f"<td><strong>no money moved</strong><span class='cash-why'>{why}</span></td>"
+                f"<td class='num'>{money(0)}</td><td class='num'>{money(running)}</td></tr>"
+            )
+
+    rows.append(
+        f"<tr class='cash-close'><td>—</td><td><strong>Ending balance</strong>"
+        f"<span class='cash-why'>checked against <code>cash_accounts</code> in the "
+        f"working database</span></td>"
+        f"<td class='num'></td><td class='num'><strong>{money(closing)}</strong></td></tr>"
+    )
+
+    total = round(sum(p["amount"] for p in payments), 2)
+    agrees = round(opening - total, 2) == round(closing, 2)
+
+    per_ticket = "".join(
+        f"<li><strong>Ticket #{t['id']}</strong> — "
+        + (
+            f"{money(spent_by_ticket[t['id']])} out"
+            if t["id"] in spent_by_ticket
+            else "nothing spent"
+        )
+        + f" · ticket is <em>{e(t['status'])}</em></li>"
+        for t in tickets
+    )
+
+    return f"""
+  <p class="lede">Every dollar that left the account on this run, tied to the ticket
+  it belonged to. Read from <code>payments</code> and <code>approvals</code>; the
+  opening figure comes from the untouched original database.</p>
+
+  <table class="cash">
+    <thead><tr><th>Ticket</th><th>What</th><th class="num">Amount</th><th class="num">Balance</th></tr></thead>
+    <tbody>{''.join(rows)}</tbody>
+  </table>
+
+  <h4 class="plain">Per ticket</h4>
+  <ul class="cash-per">{per_ticket}</ul>
+
+  <h4 class="plain">The check</h4>
+  <p class="cash-check {'ok' if agrees else 'bad'}">
+    {money(opening)} opening − {money(total)} paid = <strong>{money(round(opening - total, 2))}</strong>,
+    and <code>cash_accounts</code> says <strong>{money(closing)}</strong>.
+    {'They agree.' if agrees else 'THEY DO NOT AGREE.'}
+  </p>
+
+  <p class="lede">Nothing came in: this shop models no revenue, so the balance only
+  falls. Both payments carry the name of the person who approved them — the agents
+  proposed, and could not have paid without that signature.</p>
+"""
+
+
 COMING = {
-    "cash": (
-        "Cash",
-        "Where the money went",
-        "This tab will track the account: what was proposed, what a human approved, "
-        "what was actually paid, and what each payment left behind.",
-    ),
     "reflection": (
         "Reflection",
         "What the run taught",
@@ -462,6 +590,16 @@ def ticket_panel(tab: dict) -> str:
 </section>"""
 
 
+def cash_panel() -> str:
+    return f"""
+<section class="panel" id="panel-cash" role="tabpanel" aria-labelledby="tab-cash" hidden>
+  <header class="panel-head">
+    <h2>Cash — where the money went</h2>
+  </header>
+  {cash_section()}
+</section>"""
+
+
 def coming_panel(key: str) -> str:
     label, title, blurb = COMING[key]
     return f"""
@@ -478,13 +616,20 @@ buttons = "".join(
     f"<button role='tab' id='tab-{t['id']}' aria-controls='panel-{t['id']}' "
     f"aria-selected='false'><span>{t['label']}</span><small>{t['sub']}</small></button>"
     for t in TABS
+) + (
+    "<button role='tab' id='tab-cash' aria-controls='panel-cash' aria-selected='false'>"
+    "<span>Cash</span><small>the ledger</small></button>"
 ) + "".join(
     f"<button role='tab' id='tab-{k}' aria-controls='panel-{k}' aria-selected='false' "
     f"class='is-later'><span>{COMING[k][0]}</span><small>coming later</small></button>"
     for k in COMING
 )
 
-panels = "".join(ticket_panel(t) for t in TABS) + "".join(coming_panel(k) for k in COMING)
+panels = (
+    "".join(ticket_panel(t) for t in TABS)
+    + cash_panel()
+    + "".join(coming_panel(k) for k in COMING)
+)
 
 HTML = f"""<!doctype html>
 <html lang="en">
@@ -564,6 +709,25 @@ HTML = f"""<!doctype html>
   .moved li, .refusals li {{ margin-bottom: .3rem; font-size: .9rem; }}
   .refusals li {{ color: var(--warn); }}
   .tool-counts td.count {{ color: var(--muted); text-align: right; width: 4rem; }}
+  table.cash {{ width: 100%; border-collapse: collapse; font-size: .92rem; margin-bottom: .6rem; }}
+  table.cash th {{
+    text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); padding: 0 .6rem .4rem 0; border-bottom: 1px solid var(--line);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }}
+  table.cash th.num, table.cash td.num {{ text-align: right; font-variant-numeric: tabular-nums; }}
+  table.cash td {{ padding: .55rem .6rem .55rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }}
+  table.cash td.out {{ color: var(--warn); font-weight: 600; }}
+  td.cash-ticket {{ font-family: ui-monospace, Menlo, monospace; color: var(--muted); }}
+  .cash-why {{ display: block; color: var(--muted); font-size: .8rem; margin-top: .15rem; }}
+  tr.cash-open td, tr.cash-close td {{ background: var(--chip); }}
+  tr.cash-none td {{ opacity: .75; }}
+  .cash-per {{ margin: 0 0 .6rem; padding-left: 1.1rem; }}
+  .cash-check {{
+    padding: .6rem .8rem; border-radius: 8px; font-size: .94rem;
+    background: var(--chip); border-left: 3px solid var(--accent);
+  }}
+  .cash-check.bad {{ background: #fdeee9; }}
   .skipped {{ color: var(--muted); font-size: .92rem; }}
   table.tools {{ width: 100%; border-collapse: collapse; font-size: .88rem; }}
   table.tools th {{

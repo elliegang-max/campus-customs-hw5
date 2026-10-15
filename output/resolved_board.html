@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Campus Customs — the board, ticket by ticket</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --cream:#faf4e8; --paper:#fffdf7; --navy:#14233f; --muted:#7b8398;
+           --line:#e2d7c3; --accent:#d6451f; --good:#2c7a55; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:2rem 1.25rem 4rem; background:var(--cream); color:var(--navy);
+         font:16px/1.55 ui-sans-serif, -apple-system, system-ui, sans-serif; }
+  .wrap { max-width:60rem; margin:0 auto; display:flex; flex-direction:column; gap:1.5rem; }
+  h1 { font-family:ui-serif, Georgia, serif; font-size:1.8rem; margin:0; }
+  h1::after { content:""; display:block; width:3rem; height:4px; background:var(--accent); margin-top:.5rem; }
+  .lede { color:var(--muted); margin:0; font-size:.95rem; }
+  .card { background:var(--paper); border:1px solid var(--line); border-radius:12px;
+           padding:1.4rem 1.5rem; box-shadow:0 10px 24px -18px rgba(20,35,63,.5); }
+  .card header { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .card h2 { font-family:ui-serif, Georgia, serif; font-size:1.25rem; margin:0; }
+  .status { padding:.2rem .6rem; border-radius:999px; font-size:.7rem; letter-spacing:.1em;
+             text-transform:uppercase; }
+  .status.resolved { background:#e0efe6; color:var(--good); font-weight:700; }
+  .status.open { background:#fbe7d9; color:#8a3b12; }
+  .meta { color:var(--muted); font-size:.85rem; margin:.2rem 0 1rem; }
+  h3 { font-size:.74rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
+        margin:1.2rem 0 .4rem; }
+  figure.shot { margin:0; }
+  figure.shot img { width:100%; border:1px solid var(--line); border-radius:8px; display:block; }
+  figcaption { color:var(--muted); font-size:.78rem; margin-top:.35rem; text-align:center; }
+  .shot-missing { border:1px dashed var(--line); border-radius:8px; padding:1.5rem;
+                   text-align:center; color:var(--muted); font-size:.9rem; background:#fbf7ee; }
+  .shot-missing code { background:#f0ece4; padding:.1rem .35rem; border-radius:4px; }
+  ul { margin:0; padding-left:1.1rem; }
+  ul.agents { list-style:none; padding:0; }
+  ul.agents li { border-left:3px solid var(--who); padding-left:.6rem; margin-bottom:.4rem; font-size:.92rem; }
+  ul.approvals li { font-size:.92rem; margin-bottom:.3rem; }
+  li.none { color:var(--muted); font-style:italic; list-style:none; margin-left:-1.1rem; }
+  .cash { margin:1rem 0 0; padding-top:.7rem; border-top:1px solid var(--line);
+           font-variant-numeric:tabular-nums; }
+  footer { color:var(--muted); font-size:.82rem; text-align:center; }
+</style>
+<div class="wrap">
+  <header>
+    <h1>The board, ticket by ticket</h1>
+    <p class="lede">Shop date 2026-08-31 · checking ended at
+      <strong>$160.00</strong> · built from the audit trail and the
+      working database.</p>
+  </header>
+  
+<section class="card">
+  <header>
+    <h2>Ticket #101 — Bulldog tee</h2>
+    <span class="status open">open</span>
+  </header>
+  <p class="meta">customer_order · Tauhid Zaman · 3 run(s)</p>
+
+  <figure class="shot"><div class="shot-missing">
+      <p><strong>No screenshot yet for ticket 101.</strong></p>
+      <p>Start the board, work ticket 101, and save the screenshot as
+      <code>output/board_shots/ticket-101.png</code>. Re-run
+      <code>scripts/build_resolved.py</code> and it appears here.</p>
+    </div>
+    <figcaption>the React board, ticket #101</figcaption>
+  </figure>
+
+  <h3>Outcome</h3>
+  <p>Size S is out of stock (short by 1). Inventory reports Bulldog Print Co. can ship now with earliest availability 2026-09-05; no open unpaid invoice blocks shipment. Accounting confirms no additional payment is required. Customer Service drafted a reply; it has not been sent.</p>
+
+  <h3>Who did what</h3>
+  <ul class="agents"><li style='--who:#2F4A86'><strong>boss</strong> triaged the ticket, delegated, and decided what should happen</li><li style='--who:#2C7A55'><strong>inventory</strong> checked stock for the SKU and size, and whether the vendor could resupply</li><li style='--who:#B4581C'><strong>accounting</strong> weighed the obligations against cash and prepared payments for approval</li><li style='--who:#0E7A84'><strong>customer service</strong> drafted the reply to the requester and left it on the board, unsent</li></ul>
+
+  <h3>Human approvals</h3>
+  <ul class="approvals"><li>Shutong Gang approved invoice #501 — <strong>$840.00</strong>, proposed by accounting</li></ul>
+
+  <p class="cash">cash out on this ticket: <strong>$840.00</strong></p>
+</section>
+<section class="card">
+  <header>
+    <h2>Ticket #102 — Rent due</h2>
+    <span class="status resolved">resolved</span>
+  </header>
+  <p class="meta">rent_notice · Elm City Properties · 2 run(s)</p>
+
+  <figure class="shot"><div class="shot-missing">
+      <p><strong>No screenshot yet for ticket 102.</strong></p>
+      <p>Start the board, work ticket 102, and save the screenshot as
+      <code>output/board_shots/ticket-102.png</code>. Re-run
+      <code>scripts/build_resolved.py</code> and it appears here.</p>
+    </div>
+    <figcaption>the React board, ticket #102</figcaption>
+  </figure>
+
+  <h3>Outcome</h3>
+  <p>Facilities confirmed lease 1 rent of $2,400 was due 2026-09-02. Accounting confirmed it was paid on 2026-08-31 under an existing human approval; checking balance afterward is $160. Customer Service drafted an unsent payment confirmation.</p>
+
+  <h3>Who did what</h3>
+  <ul class="agents"><li style='--who:#2F4A86'><strong>boss</strong> triaged the ticket, delegated, and decided what should happen</li><li style='--who:#6B4BA3'><strong>facilities</strong> read the lease: rent, landlord, and when it falls due</li><li style='--who:#B4581C'><strong>accounting</strong> weighed the obligations against cash and prepared payments for approval</li><li style='--who:#0E7A84'><strong>customer service</strong> drafted the reply to the requester and left it on the board, unsent</li></ul>
+
+  <h3>Human approvals</h3>
+  <ul class="approvals"><li>Shutong Gang approved rent #1 — <strong>$2,400.00</strong>, proposed by accounting</li></ul>
+
+  <p class="cash">cash out on this ticket: <strong>$2,400.00</strong></p>
+</section>
+<section class="card">
+  <header>
+    <h2>Ticket #103 — Bulk hoodie discount</h2>
+    <span class="status open">open</span>
+  </header>
+  <p class="meta">price_override · Yale AI Club · 3 run(s)</p>
+
+  <figure class="shot"><div class="shot-missing">
+      <p><strong>No screenshot yet for ticket 103.</strong></p>
+      <p>Start the board, work ticket 103, and save the screenshot as
+      <code>output/board_shots/ticket-103.png</code>. Re-run
+      <code>scripts/build_resolved.py</code> and it appears here.</p>
+    </div>
+    <figcaption>the React board, ticket #103</figcaption>
+  </figure>
+
+  <h3>Outcome</h3>
+  <p>8 of 20 requested size-M hoodies are on hand; 12 are short. Inventory reports the remaining quantity&#x27;s earliest availability as 2026-09-05. Acquiring the 12-unit shortfall at the recorded $22 unit cost would cost $264; checking has $160, so this cannot currently be afforded. No discount amount or decision is in the database.</p>
+
+  <h3>Who did what</h3>
+  <ul class="agents"><li style='--who:#2F4A86'><strong>boss</strong> triaged the ticket, delegated, and decided what should happen</li><li style='--who:#2C7A55'><strong>inventory</strong> checked stock for the SKU and size, and whether the vendor could resupply</li><li style='--who:#B4581C'><strong>accounting</strong> weighed the obligations against cash and prepared payments for approval</li><li style='--who:#0E7A84'><strong>customer service</strong> drafted the reply to the requester and left it on the board, unsent</li></ul>
+
+  <h3>Human approvals</h3>
+  <ul class="approvals"><li class='none'>no payment was needed for this ticket</li></ul>
+
+  <p class="cash">cash out on this ticket: <strong>$0.00</strong></p>
+</section>
+  <footer>Rebuild with <code>scripts/build_resolved.py</code>.</footer>
+</div>
+</html>

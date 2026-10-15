@@ -1032,3 +1032,127 @@ Both are the agents being right, not failing.
 
 Resolving either one needs a decision from a person, which is exactly where the
 system is designed to stop.
+
+---
+
+## 9. System reference
+
+Everything in one place. Each row points at the section that explains it.
+
+### 9.1 The database — 11 tables
+
+Nine came in the pack; `approvals` and `drafts` are created on the working copy
+at first write (§4.2).
+
+| Table | Holds | Who writes it |
+|---|---|---|
+| `desk` | `date_today` — the shop's own date | nobody |
+| `tickets` | the board: type, requester, links, status | `resolve_ticket` |
+| `inventory` | stock by SKU and size | nobody |
+| `pricing` | unit cost and list price | nobody |
+| `vendors` | who supplies what, and `lead_days` | nobody |
+| `invoices` | what the shop owes vendors | `pay` |
+| `leases` | the premises, rent, next due | `pay` |
+| `cash_accounts` | the balance | `pay` |
+| `payments` | the ledger of money out | `pay` |
+| `approvals` | proposals and human decisions | `propose_payment`, `approve_payment`, `pay` |
+| `drafts` | replies written, none sent | `record_draft_reply` |
+
+Detail in §1; the tables each tool touches in §4.2.
+
+### 9.2 The MCP tools — nine
+
+| Tool | Kind | Reaches |
+|---|---|---|
+| `list_tickets` | read | `desk`, `tickets` |
+| `get_ticket` | read | the ticket plus every row it links to |
+| `get_vendor_status` | read | `vendors`, `invoices` |
+| `list_approvals` | read | `approvals` |
+| `propose_payment` | write | `approvals` |
+| `record_draft_reply` | write | `drafts` |
+| `resolve_ticket` | write | `tickets` |
+| `pay` | **money** | `payments`, `cash_accounts`, `approvals`, `invoices`/`leases` |
+| `approve_payment` | **human only** | `approvals` |
+
+Detail in §2 and §4.2. `approve_payment` is filtered out of the agents'
+toolset — they cannot call what they cannot see.
+
+### 9.3 The five agents
+
+| Agent | Owns | Delegates to |
+|---|---|---|
+| **Boss** | triage, deciding, ordering, closing | all four |
+| **Inventory** | stock, shortfalls, resupply | — |
+| **Accounting** | cash, invoices, proposing and paying | — |
+| **Facilities** | leases, landlords, rent | — |
+| **Customer Service** | the reply to the requester | Inventory |
+
+All five run `gpt-6-luna` through Portkey, built by one factory that refuses any
+other model. Detail in §3; who opens which ticket, and why, in §5.2.
+
+### 9.4 The API — ten routes
+
+`GET /api/health` · `GET /api/tickets` · `GET /api/tickets/{id}` ·
+`POST /api/tickets/{id}/run` · `GET /api/runs/{run_id}` · `GET /api/events` ·
+`GET /api/approvals` · **`POST /api/approvals/{id}`** · `GET /api/cash` ·
+`POST /api/reset`
+
+Every one goes through MCP except `/api/reset`, which copies a file. One line
+each in §6.1; what each was tested with in §6.3.
+
+### 9.5 The dashboard
+
+React + Vite + TypeScript in `frontend/`, calling
+`http://localhost:8000`. Three columns under a slim top bar: tickets as paper
+tags, the agent workspace with a live feed, approvals as receipt slips. Each
+agent has a colour, a glyph and a status pill; the balance is the biggest number
+on the page and counts down after a payment. Detail in §7, and the reasoning in
+[`design.md`](design.md).
+
+### 9.6 The safety rules, and where each one lives
+
+| Rule | Enforced by |
+|---|---|
+| No payment without explicit human approval | `pay` reads `approvals` at payment time; `approve_payment` is not in the agents' toolset |
+| Agents may only *propose* | `propose_payment` writes a row and nothing else |
+| No cash account below zero | `pay` computes the remaining balance and refuses |
+| One approval buys one payment | the approval is marked `used`; `pay` also re-checks the invoice's own status and same-day rent |
+| A payment is all-or-nothing | the five writes happen in one transaction |
+| Read tools cannot write | read connections open `mode=ro` |
+| "Today" is the shop's date | every tool reads `desk.date_today` and returns it |
+| Never invent data | tools raise on unknown ids and list the ids that exist |
+| Nothing is sent to anyone | there is no tool that sends mail; drafts carry `sent = false` |
+| One model only | `settings.model()` refuses any name but `gpt-6-luna` |
+
+Detail and the tests behind each in §4.3.
+
+### 9.7 What is on disk
+
+| File | What |
+|---|---|
+| `output/harness.md` | this write-up |
+| `output/data_model.md` | the database walkthrough |
+| `output/design.md` | why the dashboard looks as it does |
+| `output/desk_tickets.html` | the desk page: Expected, Actual, and the cash ledger |
+| `output/resolved_tickets.json` | per ticket: status, outcome, agent contributions, approvals |
+| `output/resolved_board.html` | the board ticket by ticket, with screenshot slots |
+| `output/audit_trail.json` | **800 records across 18 runs**, append-only |
+| `output/board_review*.json`, `run_*_pass*.json` | the Boss's reviews, run by run |
+| `output/mcp_smoke.json` | tool output against the database, 22 checks |
+
+### 9.8 Known gaps
+
+Honest list, all reproducible:
+
+- **The division of labour is a convention.** Every agent shares one toolset, so
+  the Boss can call `pay` — and did, on ticket 101 (§8.3). The guardrail held;
+  the role boundary did not. Per-agent toolsets would fix it.
+- **A duplicate proposal can be created once the first is approved.**
+  `propose_payment` suppresses a *pending* duplicate, not an approved one, so
+  approval #3 sits on the board unusable (§8.3).
+- **Two tickets cannot be closed inside this world.** 101 waits on a shipment
+  that cannot arrive while the date is frozen; 103 needs a human to set a
+  discount and more cash than is left (§8.4).
+- **The board has not been seen rendered.** The dashboard builds and its data
+  path is proven, but Chrome was unreachable from this session, so
+  `resolved_board.html` has screenshot slots rather than screenshots (§7.4).

@@ -596,3 +596,45 @@ taught the model mid-run, when Accounting asked for vendor id 0 twice and the
 tool answered with the ids that exist; and a dead duplicate proposal was left on
 the board, because the duplicate check looks for a *pending* proposal and misses
 one that is already approved.
+
+---
+
+## Problem 8 — Cash, the resolved record, and finishing the harness
+
+**Prompt** — 2026-10-15
+
+> On the Cash tab of the same output/desk_tickets.html, itemize the money:
+> starting checking balance (after the reset); for each ticket how cash changed
+> when that ticket resolved, and why (which pay / purchase, dollar amount);
+> ending checking balance — it must match cash_accounts in the working database.
+> Wrong cash math loses points even if the board shows every ticket resolved.
+> Also save output/resolved_tickets.json [...] and output/resolved_board.html —
+> a page you can double-click with a screenshot of your React board for each
+> resolved ticket. Append real runs to output/audit_trail.json. Finish
+> output/harness.md so it covers tables, MCP tools, the five agents, API routes,
+> the dashboard, and safety rules.
+
+**What Claude did.** Built the Cash tab from the `payments` and `approvals`
+tables, taking the opening balance from the untouched original database and
+tying each payment to its ticket through the ticket's own `invoice_id` /
+`lease_id` rather than by hand: $3,400.00 opening, −$840.00 on ticket 101
+(invoice #501, the shipping blocker), −$2,400.00 on ticket 102 (rent), nothing
+on 103 because the $264 restock exceeds the $160 left. The page prints the check
+itself — opening minus paid against `cash_accounts` — and both figures are
+$160.00. One wording fix came out of reading it back: the ledger first showed
+the rent's *rolled* due date, so it now says which rent was paid and where the
+lease moved to.
+
+`scripts/build_resolved.py` writes `resolved_tickets.json` and
+`resolved_board.html` from the audit trail and the database. The audit trail now
+holds **800 records across 18 runs**, appended, never truncated.
+
+Harness section 9 is a reference covering all eleven tables, the nine MCP tools,
+the five agents, the ten API routes, the dashboard, and a table of every safety
+rule against the thing that actually enforces it — plus a Known gaps list naming
+four real ones rather than closing on a clean note.
+
+**The screenshots could not be taken.** Chrome is not reachable from this
+session and hw4's servers still hold ports 5173 and 8000, so
+`resolved_board.html` renders a labelled slot per ticket: drop a PNG at
+`output/board_shots/ticket-<id>.png`, re-run the script, and it appears.

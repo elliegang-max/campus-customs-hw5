@@ -76,6 +76,25 @@
   .moved li, .refusals li { margin-bottom: .3rem; font-size: .9rem; }
   .refusals li { color: var(--warn); }
   .tool-counts td.count { color: var(--muted); text-align: right; width: 4rem; }
+  table.cash { width: 100%; border-collapse: collapse; font-size: .92rem; margin-bottom: .6rem; }
+  table.cash th {
+    text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); padding: 0 .6rem .4rem 0; border-bottom: 1px solid var(--line);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+  table.cash th.num, table.cash td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.cash td { padding: .55rem .6rem .55rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.cash td.out { color: var(--warn); font-weight: 600; }
+  td.cash-ticket { font-family: ui-monospace, Menlo, monospace; color: var(--muted); }
+  .cash-why { display: block; color: var(--muted); font-size: .8rem; margin-top: .15rem; }
+  tr.cash-open td, tr.cash-close td { background: var(--chip); }
+  tr.cash-none td { opacity: .75; }
+  .cash-per { margin: 0 0 .6rem; padding-left: 1.1rem; }
+  .cash-check {
+    padding: .6rem .8rem; border-radius: 8px; font-size: .94rem;
+    background: var(--chip); border-left: 3px solid var(--accent);
+  }
+  .cash-check.bad { background: #fdeee9; }
   .skipped { color: var(--muted); font-size: .92rem; }
   table.tools { width: 100%; border-collapse: collapse; font-size: .88rem; }
   table.tools th {
@@ -127,7 +146,7 @@
     checking holds <strong>$160.00</strong>.
   </p>
 
-  <div role="tablist" aria-label="Tickets"><button role='tab' id='tab-101' aria-controls='panel-101' aria-selected='false'><span>Ticket 101</span><small>Customer order</small></button><button role='tab' id='tab-102' aria-controls='panel-102' aria-selected='false'><span>Ticket 102</span><small>Rent notice</small></button><button role='tab' id='tab-103' aria-controls='panel-103' aria-selected='false'><span>Ticket 103</span><small>Price override</small></button><button role='tab' id='tab-cash' aria-controls='panel-cash' aria-selected='false' class='is-later'><span>Cash</span><small>coming later</small></button><button role='tab' id='tab-reflection' aria-controls='panel-reflection' aria-selected='false' class='is-later'><span>Reflection</span><small>coming later</small></button></div>
+  <div role="tablist" aria-label="Tickets"><button role='tab' id='tab-101' aria-controls='panel-101' aria-selected='false'><span>Ticket 101</span><small>Customer order</small></button><button role='tab' id='tab-102' aria-controls='panel-102' aria-selected='false'><span>Ticket 102</span><small>Rent notice</small></button><button role='tab' id='tab-103' aria-controls='panel-103' aria-selected='false'><span>Ticket 103</span><small>Price override</small></button><button role='tab' id='tab-cash' aria-controls='panel-cash' aria-selected='false'><span>Cash</span><small>the ledger</small></button><button role='tab' id='tab-reflection' aria-controls='panel-reflection' aria-selected='false' class='is-later'><span>Reflection</span><small>coming later</small></button></div>
   
 <section class="panel" id="panel-101" role="tabpanel" aria-labelledby="tab-101" hidden>
   <header class="panel-head">
@@ -263,10 +282,32 @@
 </section>
 <section class="panel" id="panel-cash" role="tabpanel" aria-labelledby="tab-cash" hidden>
   <header class="panel-head">
-    <h2>Where the money went <span class="later">coming later</span></h2>
+    <h2>Cash — where the money went</h2>
   </header>
-  <p class="lede">This tab will track the account: what was proposed, what a human approved, what was actually paid, and what each payment left behind.</p>
-  <div class="placeholder">Nothing here yet.</div>
+  
+  <p class="lede">Every dollar that left the account on this run, tied to the ticket
+  it belonged to. Read from <code>payments</code> and <code>approvals</code>; the
+  opening figure comes from the untouched original database.</p>
+
+  <table class="cash">
+    <thead><tr><th>Ticket</th><th>What</th><th class="num">Amount</th><th class="num">Balance</th></tr></thead>
+    <tbody><tr class='cash-open'><td>—</td><td><strong>Starting balance</strong><span class='cash-why'>after <code>./scripts/reset_db.sh</code></span></td><td class='num'></td><td class='num'><strong>$3,400.00</strong></td></tr><tr><td class='cash-ticket'>#101</td><td><strong>invoice payment</strong><span class='cash-why'>invoice #501 — Rush reprint CC-TEE-WHITE S; the vendor would not ship while it was open<br>approved by <strong>Shutong Gang</strong>, proposed by accounting</span></td><td class='num out'>−$840.00</td><td class='num'>$2,560.00</td></tr><tr><td class='cash-ticket'>#102</td><td><strong>rent payment</strong><span class='cash-why'>rent on lease #1, Chapel Street shop, which was due 2026-09-02; paying it rolled the lease on to 2026-10-02<br>approved by <strong>Shutong Gang</strong>, proposed by accounting</span></td><td class='num out'>−$2,400.00</td><td class='num'>$160.00</td></tr><tr class='cash-none'><td class='cash-ticket'>#103</td><td><strong>no money moved</strong><span class='cash-why'>the 12-unit restock would cost $264.00, more than the $160.00 left</span></td><td class='num'>$0.00</td><td class='num'>$160.00</td></tr><tr class='cash-close'><td>—</td><td><strong>Ending balance</strong><span class='cash-why'>checked against <code>cash_accounts</code> in the working database</span></td><td class='num'></td><td class='num'><strong>$160.00</strong></td></tr></tbody>
+  </table>
+
+  <h4 class="plain">Per ticket</h4>
+  <ul class="cash-per"><li><strong>Ticket #101</strong> — $840.00 out · ticket is <em>open</em></li><li><strong>Ticket #102</strong> — $2,400.00 out · ticket is <em>resolved</em></li><li><strong>Ticket #103</strong> — nothing spent · ticket is <em>open</em></li></ul>
+
+  <h4 class="plain">The check</h4>
+  <p class="cash-check ok">
+    $3,400.00 opening − $3,240.00 paid = <strong>$160.00</strong>,
+    and <code>cash_accounts</code> says <strong>$160.00</strong>.
+    They agree.
+  </p>
+
+  <p class="lede">Nothing came in: this shop models no revenue, so the balance only
+  falls. Both payments carry the name of the person who approved them — the agents
+  proposed, and could not have paid without that signature.</p>
+
 </section>
 <section class="panel" id="panel-reflection" role="tabpanel" aria-labelledby="tab-reflection" hidden>
   <header class="panel-head">

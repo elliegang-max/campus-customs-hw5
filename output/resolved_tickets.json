@@ -1,0 +1,254 @@
+{
+  "shop_date": "2026-08-31",
+  "checking_end": 160.0,
+  "tickets": [
+    {
+      "id": 101,
+      "type": "customer_order",
+      "requester": "Tauhid Zaman",
+      "subject": "Bulldog tee",
+      "final_status": "open",
+      "outcome": "Size S is out of stock (short by 1). Inventory reports Bulldog Print Co. can ship now with earliest availability 2026-09-05; no open unpaid invoice blocks shipment. Accounting confirms no additional payment is required. Customer Service drafted a reply; it has not been sent.",
+      "recommended_action": "Keep the ticket open pending stock arrival and fulfillment. The draft says availability is expected from 2026-09-05; do not promise a stronger delivery date.",
+      "still_open_because": "Keep the ticket open pending stock arrival and fulfillment. The draft says availability is expected from 2026-09-05; do not promise a stronger delivery date.",
+      "resolution_note": null,
+      "runs": 3,
+      "agents": [
+        {
+          "agent": "boss",
+          "contributed": "triaged the ticket, delegated, and decided what should happen"
+        },
+        {
+          "agent": "inventory",
+          "contributed": "checked stock for the SKU and size, and whether the vendor could resupply"
+        },
+        {
+          "agent": "accounting",
+          "contributed": "weighed the obligations against cash and prepared payments for approval"
+        },
+        {
+          "agent": "customer_service",
+          "contributed": "drafted the reply to the requester and left it on the board, unsent"
+        }
+      ],
+      "delegations": [
+        {
+          "from": "boss",
+          "to": "inventory"
+        },
+        {
+          "from": "boss",
+          "to": "accounting"
+        },
+        {
+          "from": "boss",
+          "to": "customer_service"
+        },
+        {
+          "from": "customer_service",
+          "to": "inventory"
+        }
+      ],
+      "tools_used": {
+        "get_ticket": 16,
+        "list_tickets": 3,
+        "get_vendor_status": 10,
+        "propose_payment": 2,
+        "list_approvals": 5,
+        "record_draft_reply": 3,
+        "pay": 1
+      },
+      "tool_refusals": [],
+      "human_approvals": [
+        {
+          "approval_id": 1,
+          "approved_by": "Shutong Gang",
+          "for": "invoice #501",
+          "amount": 840.0,
+          "proposed_by": "accounting"
+        }
+      ],
+      "cash_effect": {
+        "paid_out": 840.0,
+        "payments": [
+          {
+            "payment_id": 1,
+            "kind": "invoice",
+            "ref_id": 501,
+            "amount": 840.0,
+            "paid_at": "2026-08-31",
+            "approved_by": "Shutong Gang",
+            "proposed_by": "accounting",
+            "approval_id": 1
+          }
+        ]
+      },
+      "draft_reply": {
+        "to": "Tauhid Zaman",
+        "subject": "Re: Bulldog tee",
+        "sent": false
+      }
+    },
+    {
+      "id": 102,
+      "type": "rent_notice",
+      "requester": "Elm City Properties",
+      "subject": "Rent due",
+      "final_status": "resolved",
+      "outcome": "Facilities confirmed lease 1 rent of $2,400 was due 2026-09-02. Accounting confirmed it was paid on 2026-08-31 under an existing human approval; checking balance afterward is $160. Customer Service drafted an unsent payment confirmation.",
+      "recommended_action": "The rent notice is complete; the confirmation draft is on the board and has not been sent.",
+      "still_open_because": null,
+      "resolution_note": "Confirmed rent was paid on 2026-08-31 under the existing human approval. Customer Service drafted a confirmation to Elm City Properties; draft remains unsent.",
+      "runs": 2,
+      "agents": [
+        {
+          "agent": "boss",
+          "contributed": "triaged the ticket, delegated, and decided what should happen"
+        },
+        {
+          "agent": "facilities",
+          "contributed": "read the lease: rent, landlord, and when it falls due"
+        },
+        {
+          "agent": "accounting",
+          "contributed": "weighed the obligations against cash and prepared payments for approval"
+        },
+        {
+          "agent": "customer_service",
+          "contributed": "drafted the reply to the requester and left it on the board, unsent"
+        }
+      ],
+      "delegations": [
+        {
+          "from": "boss",
+          "to": "facilities"
+        },
+        {
+          "from": "boss",
+          "to": "accounting"
+        },
+        {
+          "from": "boss",
+          "to": "customer_service"
+        }
+      ],
+      "tools_used": {
+        "get_ticket": 8,
+        "propose_payment": 1,
+        "record_draft_reply": 2,
+        "list_approvals": 3,
+        "list_tickets": 1,
+        "pay": 1,
+        "resolve_ticket": 1
+      },
+      "tool_refusals": [],
+      "human_approvals": [
+        {
+          "approval_id": 2,
+          "approved_by": "Shutong Gang",
+          "for": "rent #1",
+          "amount": 2400.0,
+          "proposed_by": "accounting"
+        }
+      ],
+      "cash_effect": {
+        "paid_out": 2400.0,
+        "payments": [
+          {
+            "payment_id": 2,
+            "kind": "rent",
+            "ref_id": 1,
+            "amount": 2400.0,
+            "paid_at": "2026-08-31",
+            "approved_by": "Shutong Gang",
+            "proposed_by": "accounting",
+            "approval_id": 2
+          }
+        ]
+      },
+      "draft_reply": {
+        "to": "Elm City Properties",
+        "subject": "Re: Rent due",
+        "sent": false
+      }
+    },
+    {
+      "id": 103,
+      "type": "price_override",
+      "requester": "Yale AI Club",
+      "subject": "Bulk hoodie discount",
+      "final_status": "open",
+      "outcome": "8 of 20 requested size-M hoodies are on hand; 12 are short. Inventory reports the remaining quantity's earliest availability as 2026-09-05. Acquiring the 12-unit shortfall at the recorded $22 unit cost would cost $264; checking has $160, so this cannot currently be afforded. No discount amount or decision is in the database.",
+      "recommended_action": "Keep the ticket open. Do not promise a discount or full fulfillment. A human must decide whether and what bulk discount to offer; separately, the shortfall cannot be acquired at the recorded cost from current checking funds. Customer Service drafted a reply stating the available quantity and delay without disclosing internal finances.",
+      "still_open_because": "Keep the ticket open. Do not promise a discount or full fulfillment. A human must decide whether and what bulk discount to offer; separately, the shortfall cannot be acquired at the recorded cost from current checking funds. Customer Service drafted a reply stating the available quantity and delay without disclosing internal finances.",
+      "resolution_note": null,
+      "runs": 3,
+      "agents": [
+        {
+          "agent": "boss",
+          "contributed": "triaged the ticket, delegated, and decided what should happen"
+        },
+        {
+          "agent": "inventory",
+          "contributed": "checked stock for the SKU and size, and whether the vendor could resupply"
+        },
+        {
+          "agent": "accounting",
+          "contributed": "weighed the obligations against cash and prepared payments for approval"
+        },
+        {
+          "agent": "customer_service",
+          "contributed": "drafted the reply to the requester and left it on the board, unsent"
+        }
+      ],
+      "delegations": [
+        {
+          "from": "boss",
+          "to": "inventory"
+        },
+        {
+          "from": "boss",
+          "to": "accounting"
+        },
+        {
+          "from": "boss",
+          "to": "customer_service"
+        },
+        {
+          "from": "customer_service",
+          "to": "inventory"
+        }
+      ],
+      "tools_used": {
+        "get_ticket": 17,
+        "get_vendor_status": 14,
+        "list_tickets": 3,
+        "record_draft_reply": 3,
+        "list_approvals": 4
+      },
+      "tool_refusals": [
+        {
+          "agent": "accounting",
+          "tool": "get_vendor_status",
+          "refused": "ModelRetry: Error calling tool 'get_vendor_status': no vendor with id 0; vendors on file: [{'id': 1, 'name': 'Bulldog Print Co'}, {'id': 2, 'name': 'Elm City Gifts'}, {'id': 3, 'name': 'QuickShip CT'}]"
+        },
+        {
+          "agent": "accounting",
+          "tool": "get_vendor_status",
+          "refused": "ModelRetry: Error calling tool 'get_vendor_status': no vendor with id 0; vendors on file: [{'id': 1, 'name': 'Bulldog Print Co'}, {'id': 2, 'name': 'Elm City Gifts'}, {'id': 3, 'name': 'QuickShip CT'}]"
+        }
+      ],
+      "human_approvals": [],
+      "cash_effect": {
+        "paid_out": 0,
+        "payments": []
+      },
+      "draft_reply": {
+        "to": "Yale AI Club",
+        "subject": "Re: Bulk hoodie discount",
+        "sent": false
+      }
+    }
+  ],
+  "note": "Built from output/audit_trail.json and the working database. A ticket is resolved only when the team called resolve_ticket."
+}
