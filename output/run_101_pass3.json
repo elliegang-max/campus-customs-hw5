@@ -1,0 +1,33 @@
+{
+  "shop_date": "2026-08-31",
+  "cash_available": 160.0,
+  "outcomes": [
+    {
+      "ticket_id": 101,
+      "kind": "customer_order",
+      "requester": "Tauhid Zaman",
+      "delegated_to": [
+        "inventory",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "Size S is out of stock (short by 1). Inventory reports Bulldog Print Co. can ship now with earliest availability 2026-09-05; no open unpaid invoice blocks shipment. Accounting confirms no additional payment is required. Customer Service drafted a reply; it has not been sent.",
+      "recommended_action": "Keep the ticket open pending stock arrival and fulfillment. The draft says availability is expected from 2026-09-05; do not promise a stronger delivery date.",
+      "needs_human": false,
+      "approval_requests": [],
+      "draft_reply": {
+        "ticket_id": 101,
+        "to": "Tauhid Zaman",
+        "subject": "Re: Bulldog tee",
+        "body": "Hi Tauhid,\n\nThe Classic Bulldog Tee in size S is currently out of stock. It is expected to be available from September 5, 2026. Sorry for the wait.\n\nBest,\nCampus Customs",
+        "promises_made": [
+          "Expected availability from September 5, 2026"
+        ],
+        "sent": false
+      },
+      "resolved": false
+    }
+  ],
+  "spending_plan": [],
+  "summary": "Ticket 101 remains open while the requested size is out of stock. Vendor availability is expected from 2026-09-05; a customer reply draft is on the board and has not been sent. No payment proposal is needed."
+}

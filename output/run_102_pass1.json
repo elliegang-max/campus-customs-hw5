@@ -1,0 +1,49 @@
+{
+  "shop_date": "2026-08-31",
+  "cash_available": 3400.0,
+  "outcomes": [
+    {
+      "ticket_id": 102,
+      "kind": "rent_notice",
+      "requester": "Elm City Properties",
+      "delegated_to": [
+        "facilities",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "Facilities confirmed $2,400 rent for the Chapel Street shop is due 2026-09-02, with no lease-specific issue recorded. Accounting confirmed it is affordable and proposed payment; human approval is pending. Customer Service drafted an unsent reply.",
+      "recommended_action": "Leave ticket open pending human approval of the rent proposal. If approved, pay lease 1; the proposed payment would leave $1,000 in checking.",
+      "needs_human": true,
+      "approval_requests": [
+        {
+          "kind": "rent",
+          "ref_id": 1,
+          "payee": "Elm City Properties",
+          "amount": 2400.0,
+          "account": "checking",
+          "reason": "Rent for Chapel Street shop is due 2026-09-02.",
+          "cash_before": 3400.0,
+          "cash_after": 1000.0,
+          "unblocks": [],
+          "urgency": "due_soon",
+          "approved": null
+        }
+      ],
+      "draft_reply": {
+        "ticket_id": 102,
+        "to": "Elm City Properties",
+        "subject": "Re: Rent due",
+        "body": "Hello,\n\nWe acknowledge that rent for the Chapel Street shop is due on September 2, 2026. The payment is awaiting review, so we cannot confirm that it has been approved or paid.\n\nBest,\nCampus Customs",
+        "promises_made": [
+          "Rent for the Chapel Street shop is due on September 2, 2026."
+        ],
+        "sent": false
+      },
+      "resolved": false
+    }
+  ],
+  "spending_plan": [
+    "If human-approved, pay rent of $2,400 from checking; balance would be $1,000."
+  ],
+  "summary": "Rent is due in two days. The payment has been proposed but not approved, so ticket 102 remains open. The reply is a draft only; no payment was made."
+}

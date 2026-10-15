@@ -1,0 +1,49 @@
+{
+  "shop_date": "2026-08-31",
+  "cash_available": 3400.0,
+  "outcomes": [
+    {
+      "ticket_id": 101,
+      "kind": "customer_order",
+      "requester": "Tauhid Zaman",
+      "delegated_to": [
+        "inventory",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "Size S is out of stock (short by one). Resupply is blocked by open unpaid invoice 501; the vendor\u2019s five-day lead time does not establish an availability date while blocked. Accounting proposed payment of $840, leaving $2,560 if approved. Customer Service drafted a reply saying the restock is delayed with no date to share.",
+      "recommended_action": "Leave ticket open pending human approval of invoice 501 and subsequent vendor/restock progress. If approved and the vendor can ship, reassess availability before giving a date.",
+      "needs_human": true,
+      "approval_requests": [
+        {
+          "kind": "invoice",
+          "ref_id": 501,
+          "payee": "Bulldog Print Co",
+          "amount": 840.0,
+          "account": "checking",
+          "reason": "Invoice 501 is 3 days overdue and payment may unblock ticket 101's restock.",
+          "cash_before": 3400.0,
+          "cash_after": 2560.0,
+          "unblocks": [
+            101
+          ],
+          "urgency": "overdue",
+          "approved": null
+        }
+      ],
+      "draft_reply": {
+        "ticket_id": 101,
+        "to": "Tauhid Zaman",
+        "subject": "Re: Bulldog tee",
+        "body": "Hi Tauhid,\n\nThe size S Bulldog tee is out of stock, and the restock is delayed. We don\u2019t have a date to share yet. Sorry for the wait.",
+        "promises_made": [],
+        "sent": false
+      },
+      "resolved": false
+    }
+  ],
+  "spending_plan": [
+    "If a human approves the proposed $840 invoice 501 payment, pay from checking; balance would be $2,560. Until approval, do not pay. Payment may unblock the restock for ticket 101, but no availability date is established."
+  ],
+  "summary": "Ticket 101 remains open. The requested size is unavailable and resupply is blocked; a payment proposal is pending human approval. A compliant reply draft is recorded and has not been sent."
+}

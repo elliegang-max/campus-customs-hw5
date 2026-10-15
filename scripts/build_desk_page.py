@@ -12,6 +12,7 @@ board.
 from __future__ import annotations
 
 import html
+import json
 import sqlite3
 from datetime import date, timedelta
 from pathlib import Path
@@ -19,6 +20,100 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "data" / "campus_customs_new.db"
 OUT = ROOT / "output" / "desk_tickets.html"
+ACTUALS = ROOT / "output" / "run_actuals.json"
+
+#: What actually happened, mined from the audit trail by collect_actuals.py.
+#: Absent until the agents have been run, in which case the Actual sections stay
+#: empty and the page still builds.
+RUN = json.loads(ACTUALS.read_text()) if ACTUALS.exists() else {"tickets": {}}
+
+AGENT_COLORS = {
+    "boss": "#2F4A86",
+    "inventory": "#2C7A55",
+    "accounting": "#B4581C",
+    "facilities": "#6B4BA3",
+    "customer_service": "#0E7A84",
+}
+
+
+def agent_chip(key: str) -> str:
+    color = AGENT_COLORS.get(key, "#7A6E5D")
+    label = key.replace("_", " ")
+    return f"<span class='who' style='--who:{color}'>{e(label)}</span>"
+
+
+def actual_section(ticket_id: int) -> str:
+    """What this run did with the ticket, from the trail and the database."""
+    entry = RUN["tickets"].get(str(ticket_id))
+    if not entry:
+        return "<p class='lede'>Not run yet — run the agents, then rebuild this page.</p>"
+
+    resolved = entry["final_status"] != "open"
+    agents = " ".join(agent_chip(a) for a in entry["agents"])
+    delegations = "".join(
+        f"<li>{agent_chip(a)} <span class='arrow'>asked</span> {agent_chip(b)}</li>"
+        for a, b in entry["delegations"]
+    )
+    tools = "".join(
+        f"<tr><td><code>{e(tool)}</code></td><td class='count'>{count}×</td></tr>"
+        for tool, count in sorted(entry["tools"].items(), key=lambda kv: -kv[1])
+    )
+
+    moved = []
+    for call in entry["tool_detail"]:
+        result = call["result"] if isinstance(call["result"], dict) else {}
+        if call["tool"] == "pay" and call["ok"]:
+            moved.append(
+                f"{agent_chip(call['agent'])} paid <strong>{money(result.get('amount', 0))}</strong> — "
+                f"{money(result.get('cash_before', 0))} → <strong>{money(result.get('cash_after', 0))}</strong>, "
+                f"{e(result.get('settled', ''))}, approved by {e(result.get('approved_by', ''))}"
+            )
+        elif call["tool"] == "propose_payment" and call["ok"]:
+            args = call["args"] or {}
+            moved.append(
+                f"{agent_chip(call['agent'])} proposed {money(args.get('amount', 0))} "
+                f"for {e(args.get('kind', ''))} #{args.get('ref_id')} — a human had to sign it"
+            )
+        elif call["tool"] == "resolve_ticket" and call["ok"]:
+            args = call["args"] or {}
+            moved.append(
+                f"{agent_chip(call['agent'])} closed the ticket: “{e(args.get('resolution', ''))}”"
+            )
+        elif call["tool"] == "record_draft_reply" and call["ok"]:
+            args = call["args"] or {}
+            moved.append(
+                f"{agent_chip(call['agent'])} left a draft for {e(args.get('to_whom', ''))} — unsent"
+            )
+
+    refusals = "".join(
+        f"<li>{agent_chip(r['agent'])} <code>{e(r['tool'])}</code> — {e((r['error'] or '')[:200])}</li>"
+        for r in entry["refusals"]
+    )
+
+    parts = [
+        f"<p class='actual-status {'is-resolved' if resolved else 'is-open'}'>"
+        f"<strong>{e(entry['final_status']).upper()}</strong> after "
+        f"{len(entry['runs'])} run{'s' if len(entry['runs']) != 1 else ''}</p>",
+        f"<h4 class='plain'>Agents that worked it</h4><p class='chips'>{agents}</p>",
+        f"<h4 class='plain'>What was delegated</h4><ul class='chain-list'>{delegations}</ul>",
+        f"<h4 class='plain'>Tools used</h4><table class='tools tool-counts'>{tools}</table>",
+    ]
+    if moved:
+        parts.append(
+            "<h4 class='plain'>What moved</h4><ul class='moved'>"
+            + "".join(f"<li>{m}</li>" for m in moved)
+            + "</ul>"
+        )
+    if refusals:
+        parts.append(
+            "<h4 class='plain'>Refused by a tool</h4><ul class='refusals'>" + refusals + "</ul>"
+        )
+    if entry.get("finding"):
+        parts.append(
+            f"<h4 class='plain'>Where it ended</h4><p class='summary-text'>{e(entry['finding'])}</p>"
+            f"<p class='summary-text'>{e(entry.get('recommended_action', ''))}</p>"
+        )
+    return "".join(parts)
 
 
 def q(sql: str, params: tuple = ()) -> list[dict]:
@@ -357,9 +452,12 @@ def ticket_panel(tab: dict) -> str:
   {tab['nots']}
 
   <h3 class="actual">Actual</h3>
-  <p class="lede">For me to fill in after running the agents. Saved in this browser as you type.</p>
-  <textarea class="notes" data-key="actual-{tab['id']}" rows="12"
-    placeholder="What actually happened on ticket {tab['id']}…"></textarea>
+  <p class="lede">What the team really did, from the audit trail and the database.</p>
+  {actual_section(int(tab['id']))}
+
+  <h4 class="plain">My notes</h4>
+  <textarea class="notes" data-key="actual-{tab['id']}" rows="6"
+    placeholder="Expected vs actual — what surprised you on ticket {tab['id']}?"></textarea>
   <p class="saved" data-for="actual-{tab['id']}"></p>
 </section>"""
 
@@ -448,6 +546,24 @@ HTML = f"""<!doctype html>
     font-family: ui-sans-serif, system-ui, sans-serif;
   }}
   .first-call, .skipped {{ margin: 0 0 .4rem; }}
+  .actual-status {{
+    display: inline-block; margin: 0 0 .4rem; padding: .2rem .6rem; border-radius: 999px;
+    font-family: ui-sans-serif, system-ui, sans-serif; font-size: .74rem; letter-spacing: .08em;
+  }}
+  .actual-status.is-resolved {{ background: #e0efe6; color: #2c7a55; }}
+  .actual-status.is-open {{ background: #fbe7d9; color: #8a3b12; }}
+  .who {{
+    display: inline-block; padding: .08rem .45rem; border-radius: 999px; color: #fff;
+    background: var(--who); font-size: .76rem; font-family: ui-sans-serif, system-ui, sans-serif;
+  }}
+  .chips {{ display: flex; flex-wrap: wrap; gap: .3rem; margin: 0 0 .4rem; }}
+  .chain-list, .moved, .refusals {{ margin: 0 0 .4rem; padding-left: 1.1rem; }}
+  .chain-list {{ list-style: none; padding-left: 0; }}
+  .chain-list li {{ margin-bottom: .25rem; }}
+  .arrow {{ color: var(--muted); font-size: .8rem; margin: 0 .15rem; }}
+  .moved li, .refusals li {{ margin-bottom: .3rem; font-size: .9rem; }}
+  .refusals li {{ color: var(--warn); }}
+  .tool-counts td.count {{ color: var(--muted); text-align: right; width: 4rem; }}
   .skipped {{ color: var(--muted); font-size: .92rem; }}
   table.tools {{ width: 100%; border-collapse: collapse; font-size: .88rem; }}
   table.tools th {{

@@ -1,0 +1,52 @@
+{
+  "shop_date": "2026-08-31",
+  "cash_available": 2560.0,
+  "outcomes": [
+    {
+      "ticket_id": 101,
+      "kind": "customer_order",
+      "requester": "Tauhid Zaman",
+      "delegated_to": [
+        "inventory",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "No size S tee is in stock. Vendor shipment was blocked by open invoice 501; the invoice was approved and paid, so the vendor can now ship. If ordered today, earliest availability is 2026-09-05. Customer Service drafted a reply; it has not been sent.",
+      "recommended_action": "Keep the ticket open until the restock is ordered and availability is confirmed. The approved invoice 501 payment has been made. Do not promise stock before then; the draft gives the conditional earliest availability date and does not disclose internal payment details.",
+      "needs_human": true,
+      "approval_requests": [
+        {
+          "kind": "invoice",
+          "ref_id": 501,
+          "payee": "Bulldog Print Co",
+          "amount": 840.0,
+          "account": "checking",
+          "reason": "Invoice 501 was overdue and its payment unblocked the vendor restock for ticket 101.",
+          "cash_before": 3400.0,
+          "cash_after": 2560.0,
+          "unblocks": [
+            101
+          ],
+          "urgency": "overdue",
+          "approved": true
+        }
+      ],
+      "draft_reply": {
+        "ticket_id": 101,
+        "to": "Tauhid Zaman",
+        "subject": "Re: Bulldog tee",
+        "body": "Hi Tauhid,\n\nThe size S tee is not currently available. If an order is placed on 2026-08-31, the earliest availability would be 2026-09-05. We have not placed an order.\n\nBest,\nCampus Customs",
+        "promises_made": [
+          "The size S tee is currently unavailable (quantity on hand is 0).",
+          "If ordered on 2026-08-31, earliest availability is 2026-09-05."
+        ],
+        "sent": false
+      },
+      "resolved": false
+    }
+  ],
+  "spending_plan": [
+    "Invoice 501 was paid from checking after matching approval: $3,400 before, $2,560 after. It unblocked ticket 101's vendor; ticket remains open pending the restock order and confirmed availability."
+  ],
+  "summary": "Ticket 101 is not resolved: one size S tee is out of stock and no restock order is shown as placed. The vendor can ship after invoice 501 was paid, with earliest availability 2026-09-05 if ordered on the shop date. Customer Service's reply is a draft only."
+}

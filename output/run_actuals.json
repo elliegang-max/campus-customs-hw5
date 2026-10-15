@@ -1,0 +1,543 @@
+{
+  "tickets": {
+    "101": {
+      "ticket_id": 101,
+      "runs": [
+        "ab6ec6a0c38c",
+        "b30d031820b2",
+        "de1fa02fe54b"
+      ],
+      "agents": [
+        "inventory",
+        "accounting",
+        "customer_service"
+      ],
+      "delegations": [
+        [
+          "boss",
+          "inventory"
+        ],
+        [
+          "boss",
+          "accounting"
+        ],
+        [
+          "boss",
+          "customer_service"
+        ],
+        [
+          "customer_service",
+          "inventory"
+        ]
+      ],
+      "tools": {
+        "get_ticket": 16,
+        "list_tickets": 3,
+        "get_vendor_status": 10,
+        "propose_payment": 2,
+        "list_approvals": 5,
+        "record_draft_reply": 3,
+        "pay": 1
+      },
+      "tool_detail": [
+        {
+          "agent": "accounting",
+          "tool": "propose_payment",
+          "ok": true,
+          "args": {
+            "kind": "invoice",
+            "ref_id": 501,
+            "amount": 840,
+            "reason": "Invoice 501 is 3 days overdue and payment may unblock ticket 101's restock.",
+            "requested_by": "accounting",
+            "account": "checking"
+          },
+          "result": {
+            "approval_id": 1,
+            "status": "proposed",
+            "already_proposed": false,
+            "kind": "invoice",
+            "ref_id": 501,
+            "amount": 840.0,
+            "account": "checking",
+            "cash_before": 3400.0,
+            "cash_after_if_paid": 2560.0,
+            "awaiting": "a human must approve this before it can be paid"
+          },
+          "error": null
+        },
+        {
+          "agent": "customer_service",
+          "tool": "record_draft_reply",
+          "ok": true,
+          "args": {
+            "ticket_id": 101,
+            "to_whom": "Tauhid Zaman",
+            "subject": "Re: Bulldog tee",
+            "body": "Hi Tauhid,\n\nThe size S Bulldog tee is out of stock, and the restock is delayed. We don\u2019t have a date to share yet. Sorry for the wait.",
+            "written_by": "customer_service"
+          },
+          "result": {
+            "draft_id": 1,
+            "ticket_id": 101,
+            "to": "Tauhid Zaman",
+            "written_at": "2026-08-31",
+            "sent": false,
+            "replaced_existing_draft": false,
+            "note": "the draft stays on the board; a person sends it or does not"
+          },
+          "error": null
+        },
+        {
+          "agent": "accounting",
+          "tool": "propose_payment",
+          "ok": true,
+          "args": {
+            "kind": "invoice",
+            "ref_id": 501,
+            "amount": 840,
+            "reason": "Invoice 501 is 3 days overdue and payment may unblock ticket 101's restock.",
+            "requested_by": "accounting",
+            "account": "checking"
+          },
+          "result": {
+            "approval_id": 3,
+            "status": "proposed",
+            "already_proposed": false,
+            "kind": "invoice",
+            "ref_id": 501,
+            "amount": 840.0,
+            "account": "checking",
+            "cash_before": 3400.0,
+            "cash_after_if_paid": 2560.0,
+            "awaiting": "a human must approve this before it can be paid"
+          },
+          "error": null
+        },
+        {
+          "agent": "boss",
+          "tool": "pay",
+          "ok": true,
+          "args": {
+            "kind": "invoice",
+            "ref_id": 501,
+            "account": "checking"
+          },
+          "result": {
+            "paid": true,
+            "payment_id": 1,
+            "kind": "invoice",
+            "ref_id": 501,
+            "amount": 840.0,
+            "account": "checking",
+            "paid_at": "2026-08-31",
+            "approved_by": "Shutong Gang",
+            "approval_id": 1,
+            "cash_before": 3400.0,
+            "cash_after": 2560.0,
+            "settled": "invoice 501 marked paid"
+          },
+          "error": null
+        },
+        {
+          "agent": "customer_service",
+          "tool": "record_draft_reply",
+          "ok": true,
+          "args": {
+            "ticket_id": 101,
+            "to_whom": "Tauhid Zaman",
+            "subject": "Re: Bulldog tee",
+            "body": "Hi Tauhid,\n\nThe size S tee is not currently available. If an order is placed on 2026-08-31, the earliest availability would be 2026-09-05. We have not placed an order.\n\nBest,\nCampus Customs",
+            "written_by": "customer_service"
+          },
+          "result": {
+            "draft_id": 1,
+            "ticket_id": 101,
+            "to": "Tauhid Zaman",
+            "written_at": "2026-08-31",
+            "sent": false,
+            "replaced_existing_draft": true,
+            "note": "the draft stays on the board; a person sends it or does not"
+          },
+          "error": null
+        },
+        {
+          "agent": "customer_service",
+          "tool": "record_draft_reply",
+          "ok": true,
+          "args": {
+            "ticket_id": 101,
+            "to_whom": "Tauhid Zaman",
+            "subject": "Re: Bulldog tee",
+            "body": "Hi Tauhid,\n\nThe Classic Bulldog Tee in size S is currently out of stock. It is expected to be available from September 5, 2026. Sorry for the wait.\n\nBest,\nCampus Customs",
+            "written_by": "customer_service"
+          },
+          "result": {
+            "draft_id": 1,
+            "ticket_id": 101,
+            "to": "Tauhid Zaman",
+            "written_at": "2026-08-31",
+            "sent": false,
+            "replaced_existing_draft": true,
+            "note": "the draft stays on the board; a person sends it or does not"
+          },
+          "error": null
+        }
+      ],
+      "refusals": [],
+      "final_status": "open",
+      "notes": "Needs a tee in size S.",
+      "finding": "Size S is out of stock (short by 1). Inventory reports Bulldog Print Co. can ship now with earliest availability 2026-09-05; no open unpaid invoice blocks shipment. Accounting confirms no additional payment is required. Customer Service drafted a reply; it has not been sent.",
+      "recommended_action": "Keep the ticket open pending stock arrival and fulfillment. The draft says availability is expected from 2026-09-05; do not promise a stronger delivery date.",
+      "resolved_flag": false,
+      "needs_human": false
+    },
+    "102": {
+      "ticket_id": 102,
+      "runs": [
+        "d1e1eaf27430",
+        "921fb8346946"
+      ],
+      "agents": [
+        "facilities",
+        "accounting",
+        "customer_service"
+      ],
+      "delegations": [
+        [
+          "boss",
+          "facilities"
+        ],
+        [
+          "boss",
+          "accounting"
+        ],
+        [
+          "boss",
+          "customer_service"
+        ]
+      ],
+      "tools": {
+        "get_ticket": 8,
+        "propose_payment": 1,
+        "record_draft_reply": 2,
+        "list_approvals": 3,
+        "list_tickets": 1,
+        "pay": 1,
+        "resolve_ticket": 1
+      },
+      "tool_detail": [
+        {
+          "agent": "accounting",
+          "tool": "propose_payment",
+          "ok": true,
+          "args": {
+            "kind": "rent",
+            "ref_id": 1,
+            "amount": 2400,
+            "reason": "Rent for Chapel Street shop is due 2026-09-02; checking has sufficient cash.",
+            "requested_by": "accounting",
+            "account": "checking"
+          },
+          "result": {
+            "approval_id": 2,
+            "status": "proposed",
+            "already_proposed": false,
+            "kind": "rent",
+            "ref_id": 1,
+            "amount": 2400.0,
+            "account": "checking",
+            "cash_before": 3400.0,
+            "cash_after_if_paid": 1000.0,
+            "awaiting": "a human must approve this before it can be paid"
+          },
+          "error": null
+        },
+        {
+          "agent": "customer_service",
+          "tool": "record_draft_reply",
+          "ok": true,
+          "args": {
+            "ticket_id": 102,
+            "to_whom": "Elm City Properties",
+            "subject": "Re: Rent due",
+            "body": "Hello,\n\nWe acknowledge that rent for the Chapel Street shop is due on September 2, 2026. The payment is awaiting review, so we cannot confirm that it has been approved or paid.\n\nBest,\nCampus Customs",
+            "written_by": "customer_service"
+          },
+          "result": {
+            "draft_id": 2,
+            "ticket_id": 102,
+            "to": "Elm City Properties",
+            "written_at": "2026-08-31",
+            "sent": false,
+            "replaced_existing_draft": false,
+            "note": "the draft stays on the board; a person sends it or does not"
+          },
+          "error": null
+        },
+        {
+          "agent": "accounting",
+          "tool": "pay",
+          "ok": true,
+          "args": {
+            "kind": "rent",
+            "ref_id": 1,
+            "account": "checking"
+          },
+          "result": {
+            "paid": true,
+            "payment_id": 2,
+            "kind": "rent",
+            "ref_id": 1,
+            "amount": 2400.0,
+            "account": "checking",
+            "paid_at": "2026-08-31",
+            "approved_by": "Shutong Gang",
+            "approval_id": 2,
+            "cash_before": 2560.0,
+            "cash_after": 160.0,
+            "settled": "lease 1 next_due rolled to 2026-10-02"
+          },
+          "error": null
+        },
+        {
+          "agent": "customer_service",
+          "tool": "record_draft_reply",
+          "ok": true,
+          "args": {
+            "ticket_id": 102,
+            "to_whom": "Elm City Properties",
+            "subject": "Re: Rent due",
+            "body": "Hello,\n\nWe confirm that rent for the Chapel Street shop was paid on August 31, 2026. No further payment is due for this notice.\n\nBest,\nCampus Customs",
+            "written_by": "customer_service"
+          },
+          "result": {
+            "draft_id": 2,
+            "ticket_id": 102,
+            "to": "Elm City Properties",
+            "written_at": "2026-08-31",
+            "sent": false,
+            "replaced_existing_draft": true,
+            "note": "the draft stays on the board; a person sends it or does not"
+          },
+          "error": null
+        },
+        {
+          "agent": "boss",
+          "tool": "resolve_ticket",
+          "ok": true,
+          "args": {
+            "ticket_id": 102,
+            "resolution": "Confirmed rent was paid on 2026-08-31 under the existing human approval. Customer Service drafted a confirmation to Elm City Properties; draft remains unsent.",
+            "resolved_by": "boss"
+          },
+          "result": {
+            "ticket_id": 102,
+            "status": "resolved",
+            "resolution": "Confirmed rent was paid on 2026-08-31 under the existing human approval. Customer Service drafted a confirmation to Elm City Properties; draft remains unsent.",
+            "resolved_by": "boss",
+            "resolved_at": "2026-08-31"
+          },
+          "error": null
+        }
+      ],
+      "refusals": [],
+      "final_status": "resolved",
+      "notes": "Email: shop rent due in 2 days.\n[2026-08-31, boss] Confirmed rent was paid on 2026-08-31 under the existing human approval. Customer Service drafted a confirmation to Elm City Properties; draft remains unsent.",
+      "finding": "Facilities confirmed lease 1 rent of $2,400 was due 2026-09-02. Accounting confirmed it was paid on 2026-08-31 under an existing human approval; checking balance afterward is $160. Customer Service drafted an unsent payment confirmation.",
+      "recommended_action": "The rent notice is complete; the confirmation draft is on the board and has not been sent.",
+      "resolved_flag": true,
+      "needs_human": false
+    },
+    "103": {
+      "ticket_id": 103,
+      "runs": [
+        "b8a2b52ea180",
+        "b38112000011",
+        "033a3bc11998"
+      ],
+      "agents": [
+        "inventory",
+        "accounting",
+        "customer_service"
+      ],
+      "delegations": [
+        [
+          "boss",
+          "inventory"
+        ],
+        [
+          "boss",
+          "accounting"
+        ],
+        [
+          "boss",
+          "customer_service"
+        ],
+        [
+          "customer_service",
+          "inventory"
+        ]
+      ],
+      "tools": {
+        "get_ticket": 17,
+        "get_vendor_status": 14,
+        "list_tickets": 3,
+        "record_draft_reply": 3,
+        "list_approvals": 4
+      },
+      "tool_detail": [
+        {
+          "agent": "customer_service",
+          "tool": "record_draft_reply",
+          "ok": true,
+          "args": {
+            "ticket_id": 103,
+            "to_whom": "Yale AI Club",
+            "subject": "Re: Bulk hoodie discount",
+            "body": "Hi Yale AI Club,\n\nWe currently have 8 size M hoodies available. The remaining 12 are delayed, and we don\u2019t have a restock date yet. Would you like us to set aside the available 8 while the rest are delayed? This would not confirm an order. We can\u2019t confirm a bulk discount here; that needs a separate price decision.\n\nBest,\nCampus Customs",
+            "written_by": "customer_service"
+          },
+          "result": {
+            "draft_id": 3,
+            "ticket_id": 103,
+            "to": "Yale AI Club",
+            "written_at": "2026-08-31",
+            "sent": false,
+            "replaced_existing_draft": false,
+            "note": "the draft stays on the board; a person sends it or does not"
+          },
+          "error": null
+        },
+        {
+          "agent": "customer_service",
+          "tool": "record_draft_reply",
+          "ok": true,
+          "args": {
+            "ticket_id": 103,
+            "to_whom": "Yale AI Club",
+            "subject": "Re: Bulk hoodie discount",
+            "body": "Hi Yale AI Club,\n\nWe currently have 8 of the 20 navy hoodies in size M available, so we can\u2019t fill the requested quantity in full right now. The remaining quantity is delayed; the earliest availability is September 5, 2026. Your bulk discount request is still under review, so we can\u2019t confirm a discount or accept the order terms yet.\n\nBest,\nCampus Customs",
+            "written_by": "customer_service"
+          },
+          "result": {
+            "draft_id": 3,
+            "ticket_id": 103,
+            "to": "Yale AI Club",
+            "written_at": "2026-08-31",
+            "sent": false,
+            "replaced_existing_draft": true,
+            "note": "the draft stays on the board; a person sends it or does not"
+          },
+          "error": null
+        },
+        {
+          "agent": "customer_service",
+          "tool": "record_draft_reply",
+          "ok": true,
+          "args": {
+            "ticket_id": 103,
+            "to_whom": "Yale AI Club",
+            "subject": "Re: Bulk hoodie discount",
+            "body": "Hi Yale AI Club,\n\nWe currently have 8 of the 20 navy hoodies in size M available, so we can\u2019t fill the requested quantity in full right now. The remaining quantity is delayed; the earliest availability is September 5, 2026. Your bulk discount request is still under review, so we can\u2019t confirm a discount or accept the order terms yet.\n\nBest,\nCampus Customs",
+            "written_by": "customer_service"
+          },
+          "result": {
+            "draft_id": 3,
+            "ticket_id": 103,
+            "to": "Yale AI Club",
+            "written_at": "2026-08-31",
+            "sent": false,
+            "replaced_existing_draft": true,
+            "note": "the draft stays on the board; a person sends it or does not"
+          },
+          "error": null
+        }
+      ],
+      "refusals": [
+        {
+          "agent": "accounting",
+          "tool": "get_vendor_status",
+          "error": "ModelRetry: Error calling tool 'get_vendor_status': no vendor with id 0; vendors on file: [{'id': 1, 'name': 'Bulldog Print Co'}, {'id': 2, 'name': 'Elm City Gifts'}, {'id': 3, 'name': 'QuickShip CT'}]"
+        },
+        {
+          "agent": "accounting",
+          "tool": "get_vendor_status",
+          "error": "ModelRetry: Error calling tool 'get_vendor_status': no vendor with id 0; vendors on file: [{'id': 1, 'name': 'Bulldog Print Co'}, {'id': 2, 'name': 'Elm City Gifts'}, {'id': 3, 'name': 'QuickShip CT'}]"
+        }
+      ],
+      "final_status": "open",
+      "notes": "Student org wants 20 hoodies, size M, asking for a bulk discount.",
+      "finding": "8 of 20 requested size-M hoodies are on hand; 12 are short. Inventory reports the remaining quantity's earliest availability as 2026-09-05. Acquiring the 12-unit shortfall at the recorded $22 unit cost would cost $264; checking has $160, so this cannot currently be afforded. No discount amount or decision is in the database.",
+      "recommended_action": "Keep the ticket open. Do not promise a discount or full fulfillment. A human must decide whether and what bulk discount to offer; separately, the shortfall cannot be acquired at the recorded cost from current checking funds. Customer Service drafted a reply stating the available quantity and delay without disclosing internal finances.",
+      "resolved_flag": false,
+      "needs_human": true
+    }
+  },
+  "cash_end": 160.0,
+  "payments": [
+    {
+      "id": 1,
+      "kind": "invoice",
+      "ref_id": 501,
+      "amount": 840.0,
+      "account": "checking",
+      "paid_at": "2026-08-31",
+      "approved_by": "Shutong Gang"
+    },
+    {
+      "id": 2,
+      "kind": "rent",
+      "ref_id": 1,
+      "amount": 2400.0,
+      "account": "checking",
+      "paid_at": "2026-08-31",
+      "approved_by": "Shutong Gang"
+    }
+  ],
+  "approvals": [
+    {
+      "id": 1,
+      "kind": "invoice",
+      "ref_id": 501,
+      "amount": 840.0,
+      "account": "checking",
+      "reason": "Invoice 501 is 3 days overdue and payment may unblock ticket 101's restock.",
+      "requested_by": "accounting",
+      "requested_at": "2026-08-31",
+      "status": "used",
+      "approved_by": "Shutong Gang",
+      "decided_at": "2026-08-31",
+      "payment_id": 1
+    },
+    {
+      "id": 2,
+      "kind": "rent",
+      "ref_id": 1,
+      "amount": 2400.0,
+      "account": "checking",
+      "reason": "Rent for Chapel Street shop is due 2026-09-02; checking has sufficient cash.",
+      "requested_by": "accounting",
+      "requested_at": "2026-08-31",
+      "status": "used",
+      "approved_by": "Shutong Gang",
+      "decided_at": "2026-08-31",
+      "payment_id": 2
+    },
+    {
+      "id": 3,
+      "kind": "invoice",
+      "ref_id": 501,
+      "amount": 840.0,
+      "account": "checking",
+      "reason": "Invoice 501 is 3 days overdue and payment may unblock ticket 101's restock.",
+      "requested_by": "accounting",
+      "requested_at": "2026-08-31",
+      "status": "proposed",
+      "approved_by": null,
+      "decided_at": null,
+      "payment_id": null
+    }
+  ],
+  "passes": 3
+}

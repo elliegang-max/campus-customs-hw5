@@ -1,0 +1,33 @@
+{
+  "shop_date": "2026-08-31",
+  "cash_available": 3400.0,
+  "outcomes": [
+    {
+      "ticket_id": 103,
+      "kind": "price_override",
+      "requester": "Yale AI Club",
+      "delegated_to": [
+        "inventory",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "8 of 20 requested size M hoodies are available; 12 are short. Restock is blocked by an open vendor invoice, with no date to promise. Recorded list price is $58 and unit cost is $22; a discount decision has not been made.",
+      "recommended_action": "Leave open pending a human price decision and the vendor being unblocked. Customer Service drafted a reply offering the available 8 while stating the remaining 12 are delayed with no date; it does not confirm an order or discount.",
+      "needs_human": true,
+      "approval_requests": [],
+      "draft_reply": {
+        "ticket_id": 103,
+        "to": "Yale AI Club",
+        "subject": "Re: Bulk hoodie discount",
+        "body": "Hi Yale AI Club,\n\nWe currently have 8 size M hoodies available. The remaining 12 are delayed, and we don\u2019t have a restock date yet. Would you like us to set aside the available 8 while the rest are delayed? This would not confirm an order. We can\u2019t confirm a bulk discount here; that needs a separate price decision.\n\nBest,\nCampus Customs",
+        "promises_made": [
+          "8 size M hoodies are currently available"
+        ],
+        "sent": false
+      },
+      "resolved": false
+    }
+  ],
+  "spending_plan": [],
+  "summary": "Ticket 103 remains open: the available 8 may be offered, but the 12-unit balance is delayed with no date, and a human must decide whether to grant a discount. No payment proposal was made for this ticket."
+}

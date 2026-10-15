@@ -1,0 +1,35 @@
+{
+  "shop_date": "2026-08-31",
+  "cash_available": 160.0,
+  "outcomes": [
+    {
+      "ticket_id": 102,
+      "kind": "rent_notice",
+      "requester": "Elm City Properties",
+      "delegated_to": [
+        "facilities",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "Facilities confirmed lease 1 rent of $2,400 was due 2026-09-02. Accounting confirmed it was paid on 2026-08-31 under an existing human approval; checking balance afterward is $160. Customer Service drafted an unsent payment confirmation.",
+      "recommended_action": "The rent notice is complete; the confirmation draft is on the board and has not been sent.",
+      "needs_human": false,
+      "approval_requests": [],
+      "draft_reply": {
+        "ticket_id": 102,
+        "to": "Elm City Properties",
+        "subject": "Re: Rent due",
+        "body": "Hello,\n\nWe confirm that rent for the Chapel Street shop was paid on August 31, 2026. No further payment is due for this notice.\n\nBest,\nCampus Customs",
+        "promises_made": [
+          "Rent for the Chapel Street shop was paid on 2026-08-31; no further payment is due for this notice."
+        ],
+        "sent": false
+      },
+      "resolved": true
+    }
+  ],
+  "spending_plan": [
+    "Rent lease 1, $2,400 was paid on 2026-08-31 using the existing human approval. Checking balance afterward: $160."
+  ],
+  "summary": "Ticket 102 is resolved: rent was paid before its 2026-09-02 due date, and Customer Service left an unsent confirmation draft for Elm City Properties."
+}

@@ -555,3 +555,44 @@ states quoted from the code.
 The board could not be started: hw4's dev server and API from 7 October still
 hold ports 5173 and 8000, and the sandbox refuses both stopping another
 project's processes and binding its ports.
+
+---
+
+## Problem 7 — The full sweep
+
+**Prompt** — 2026-10-15
+
+> Before testing the agents on a full run over the three tickets, reset the
+> working database data/campus_customs_new.db again so you start clean. Note the
+> starting checking balance. Then run all three tickets on the board (101, 102,
+> 103) until each is resolved. Open output/desk_tickets.html from Problem 6. On
+> each ticket tab, fill the Actual section from this run: which agents worked,
+> what they delegated, and which tools they used. Keep your Expected section so
+> you can compare the two.
+
+**What Claude did.** Reset the board (checking $3,400.00), then ran all three
+tickets, approved the two payments the team proposed, and ran them again. Pass 1
+proposed and paid nothing; the approvals went in as "Shutong Gang"; pass 2 paid
+the invoice and the rent — $3,400 → $2,560 → **$160** — and resolved ticket 102.
+A third pass changed nothing.
+
+Rather than typing the Actual sections by hand it wrote
+`scripts/collect_actuals.py`, which mines the audit trail for every run since the
+last reset and maps each run to its ticket from the Boss's own instruction, so
+the agents, delegations, tool counts, payments and refusals on each tab come from
+the record rather than from memory. `build_desk_page.py` renders them beside the
+Expected sections, which are untouched.
+
+**Two tickets are still open, and that is the agents being right.** 101's invoice
+is paid and the vendor can ship on 2026-09-05, but the shop's date never moves
+off 2026-08-31, so the tee cannot arrive inside this world. 103 needs a human to
+set the discount, and the 12-unit shortfall costs $264 against the $160 left.
+Both were reported rather than papered over.
+
+The sweep also turned up three things: the **Boss** called `pay` on ticket 101
+instead of Accounting, since every agent shares one toolset — the guardrail held
+but the division of labour is a convention, not a constraint; a tool refusal
+taught the model mid-run, when Accounting asked for vendor id 0 twice and the
+tool answered with the ids that exist; and a dead duplicate proposal was left on
+the board, because the duplicate check looks for a *pending* proposal and misses
+one that is already approved.

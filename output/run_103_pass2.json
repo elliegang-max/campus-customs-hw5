@@ -1,0 +1,34 @@
+{
+  "shop_date": "2026-08-31",
+  "cash_available": 160.0,
+  "outcomes": [
+    {
+      "ticket_id": 103,
+      "kind": "price_override",
+      "requester": "Yale AI Club",
+      "delegated_to": [
+        "inventory",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "8 of 20 requested size-M hoodies are on hand; 12 are short. Inventory reports the remaining quantity's earliest availability as 2026-09-05. Acquiring the 12-unit shortfall at the recorded $22 unit cost would cost $264; checking has $160, so this cannot currently be afforded. No discount amount or decision is in the database.",
+      "recommended_action": "Keep the ticket open. Do not promise a discount or full fulfillment. A human must decide whether and what bulk discount to offer; separately, the shortfall cannot be acquired at the recorded cost from current checking funds. Customer Service drafted a reply stating the available quantity and delay without disclosing internal finances.",
+      "needs_human": true,
+      "approval_requests": [],
+      "draft_reply": {
+        "ticket_id": 103,
+        "to": "Yale AI Club",
+        "subject": "Re: Bulk hoodie discount",
+        "body": "Hi Yale AI Club,\n\nWe currently have 8 of the 20 navy hoodies in size M available, so we can\u2019t fill the requested quantity in full right now. The remaining quantity is delayed; the earliest availability is September 5, 2026. Your bulk discount request is still under review, so we can\u2019t confirm a discount or accept the order terms yet.\n\nBest,\nCampus Customs",
+        "promises_made": [
+          "8 navy hoodies in size M are currently available.",
+          "The remaining quantity's earliest availability is September 5, 2026."
+        ],
+        "sent": false
+      },
+      "resolved": false
+    }
+  ],
+  "spending_plan": [],
+  "summary": "Ticket 103 remains open: the bulk discount requires a human decision, and the 12-unit shortfall cannot be funded from current checking. No payment proposal is appropriate for this purchase."
+}

@@ -962,3 +962,73 @@ line above a single rule, so the columns below get the space.
 
 `output/design.md` explains the look and the reason for each choice, written
 against what is actually in `frontend/`.
+
+---
+
+## 8. The full sweep
+
+Database reset first. **Checking at the start: $3,400.00**, shop date
+2026-08-31, all three tickets open, invoice #501 open, no payments.
+
+### 8.1 What it took
+
+| Pass | What happened |
+|---|---|
+| **1** — all three tickets | Two payments *proposed* (invoice #501 840.00, rent 2400.00), three drafts written, **nothing paid**, nothing resolved |
+| **human** | `scripts/approve.py 1` and `2 --by "Shutong Gang"` — both approved |
+| **2** — all three again | Invoice paid (3400 → 2560), rent paid (2560 → **160.00**), lease rolled to 2026-10-02, **ticket 102 resolved** |
+| **3** — 101 and 103 | No further change: both left open, with reasons |
+
+**Checking at the end: $160.00.** Both payments carry `approved_by: "Shutong
+Gang"` — the agents proposed them, a person signed them, and only then did the
+balance move.
+
+### 8.2 Expected against Actual
+
+Each ticket's tab in `desk_tickets.html` now carries both, filled from the audit
+trail and the database rather than from memory.
+
+| Ticket | Expected opening | Actual | Match |
+|---|---|---|---|
+| 101 | Inventory first, then Accounting on the blocked vendor, then Customer Service | exactly that, plus Customer Service asking Inventory before writing | ✓ |
+| 102 | Facilities first, then Accounting, then Customer Service | exactly that | ✓ |
+| 103 | Inventory first, then Accounting (money is implied), then Customer Service; **no `propose_payment`** | exactly that — and `propose_payment` was never called for the restock | ✓ |
+
+The 103 prediction is the one worth noting: the tab said no payment should be
+proposed, because the 264.00 restock is arithmetic rather than a bill. The team
+reached the same conclusion on its own, three runs in a row.
+
+### 8.3 Three things the sweep showed
+
+**The Boss paid the invoice, not Accounting.** On ticket 101 it was the *Boss*
+that called `pay` — every agent shares one toolset, so nothing stops it. The
+guardrail held (the payment still needed the human approval, and the approval
+was spent exactly once), but the division of labour the prompts describe is a
+convention, not a constraint. Narrowing each agent's toolset would make it one.
+
+**A tool refusal taught the model mid-run.** Twice on ticket 103, Accounting
+called `get_vendor_status(0)` — an invented id. The tool refused and listed the
+vendors that exist, and the agent recovered and asked for the right one. That is
+the "never invent" rule enforced where it cannot be argued with.
+
+**A dead proposal was left behind.** Approval #3 is a second proposal for
+invoice 501, created in pass 2 before the payment went through. The
+duplicate-suppression in `propose_payment` only looks for a pending proposal, so
+one that had already been *approved* did not stop a new one. It is harmless —
+`pay` refuses it, since the invoice is paid — but it is clutter on the board, and
+the check should look for an unspent approval rather than a pending one.
+
+### 8.4 Why 101 and 103 are still open
+
+Both are the agents being right, not failing.
+
+- **101** — the invoice is paid and Bulldog Print Co can ship, earliest
+  2026-09-05. But the customer wants a tee *in hand*, and the shop's date never
+  moves off 2026-08-31, so the stock cannot arrive inside this world. The team
+  left the ticket open "pending stock arrival" and refused to promise more.
+- **103** — needs **a human to set the discount**, which no agent may do, and the
+  12-unit shortfall costs 264.00 against the **160.00** now left in checking. The
+  team said both plainly and stopped.
+
+Resolving either one needs a decision from a person, which is exactly where the
+system is designed to stop.
