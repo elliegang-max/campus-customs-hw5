@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# --- Local-only data pack (NOT for git): database + product images ---------
+data/
+
 # Dependencies / build output
 .venv/
 venv/
