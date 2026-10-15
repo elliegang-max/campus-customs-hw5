@@ -486,3 +486,46 @@ Port 8000 itself is held by hw4's uvicorn, still running from 7 October.
 Stopping another project's process and binding its port were both refused by the
 sandbox, so the server was proved on a free port instead and the stale process
 left alone for the user to stop. The harness now lists every route on one line.
+
+---
+
+## Problem 6 — The dashboard
+
+**Prompt** — 2026-10-15
+
+> Build the frontend dashboard in frontend/ with React + Vite + TypeScript. The
+> page should call the routes you built in Problem 7 [...] List all three
+> tickets; let you pick one and start the agent team on it; show each agent and
+> what they are saying / doing while the ticket runs; mark a ticket resolved
+> when the run finishes; show a short summary of what each agent did; let a
+> human approve a pay or purchase when asked; show the checking balance (it
+> should drop after an approved pay). Make the dashboard look polished and
+> distinctive, like a real custom-apparel shop desk, not a generic admin panel.
+> Use a warm cream background, navy text, and one bold accent color. Style
+> tickets as paper tags and approvals as receipt slips. Give each agent its own
+> color and a glowing ring when active. Make the checking balance the biggest
+> number on the page. Add smooth touches like feed items sliding in, a
+> "RESOLVED" stamp on finished tickets, and the balance counting down after an
+> approved pay. Keep it responsive and readable.
+
+**What Claude did.** Built the board against the real API: tickets as paper tags
+with a punched hole and a half-degree rotation that straightens on hover,
+approvals as till receipts with a torn `clip-path` edge, five agent colours
+carried through roster chips, feed lines and the delegation chain, and the
+balance as the largest thing on the page in tabular serif figures that count
+down over 1.1 seconds when a payment lands.
+
+Two judgement calls worth recording. The RESOLVED stamp follows the *database*
+rather than the end of a run — the board refetches and stamps whatever the shop
+reports as resolved, so on a fresh board all three tickets stay open waiting on
+approvals, which is the honest picture rather than a satisfying one. And a
+refused payment is shown rather than swallowed: `refused_because` goes to the
+error banner with the balance unmoved, and failed tool calls stay in the feed
+tinted and with their error text.
+
+Verified by building (TypeScript strict and the production bundle both clean)
+and by running the whole chain — Vite served the app and proxied `/api/tickets`
+and `/api/cash` through the backend and MCP to the database. Port 8000 was still
+held by hw4's old server, so `VITE_API_TARGET` was added to point the proxy
+elsewhere for the test. Chrome was not reachable from the session, so **nobody
+has looked at the page rendered**.

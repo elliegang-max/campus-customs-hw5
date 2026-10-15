@@ -861,3 +861,84 @@ A third was fixed before it could bite: the audit run id was generated once at
 import, so every run served by one process would have shared it. It is now
 opened per run — which is also what lets the run route hand the browser an id
 before the run has finished.
+
+---
+
+## 7. The dashboard
+
+`frontend/` — React + Vite + TypeScript, calling the routes from §6.
+
+```bash
+cd backend && uvicorn main:app --reload --port 8000   # one terminal
+cd frontend && npm install && npm run dev             # another
+```
+
+Vite proxies `/api` to the backend, so every request is same-origin in
+development and the app uses plain relative URLs. `VITE_API_TARGET` overrides
+the target when something else already holds 8000.
+
+### 7.1 What the board does
+
+| Requirement | How |
+|---|---|
+| List the three tickets | `GET /api/tickets`, drawn as paper tags |
+| Pick one and start the team | click a tag, then **Send the team in** → `POST /api/tickets/{id}/run` |
+| Show each agent and what it is doing | `GET /api/events` polled every 1.5s while a run is in flight |
+| Mark a ticket resolved when the run finishes | the board refetches and stamps any ticket the database now reports as resolved |
+| Short summary of what each agent did | the Boss's outcome for that ticket: who was consulted, what was found, what is recommended |
+| Approve a pay when asked | pending approvals are receipt slips with an **Approve** button → `POST /api/approvals/{id}` |
+| Show the checking balance, dropping after a pay | `GET /api/cash`, counted down on change |
+
+### 7.2 The look
+
+Warm cream paper, navy ink, one accent — a vermilion `#d6451f` used for the
+accent rule under the masthead, the send button, the approve button, and
+nothing else that is not a decision.
+
+- **Tickets are paper tags.** Punched hole, a thread drawn across it, each one
+  rotated half a degree off square and straightening when you hover. The
+  rotation alternates so a column of them looks hung rather than stacked.
+- **Approvals are till receipts.** Monospaced, dashed rules, the total in large
+  figures, and a torn bottom edge cut with a `clip-path` zigzag.
+- **Each agent owns a colour** — Boss indigo, Inventory green, Accounting amber,
+  Facilities violet, Customer Service teal — used for its roster chip, the left
+  edge of its feed lines, and the delegation chain in the summary. Whichever
+  agent spoke last while a run is in flight gets a **ring that pulses** out from
+  its chip.
+- **The balance is the biggest thing on the page**, in a serif face with
+  tabular figures so the digits do not jiggle while it moves.
+- **Motion with a reason.** Feed items slide up as they arrive; the balance
+  *counts down* over 1.1 seconds on an ease-out curve rather than jumping, so
+  money leaving the account is something you watch; RESOLVED lands with a
+  stamp that overshoots and settles. All of it collapses under
+  `prefers-reduced-motion`.
+
+Three columns on a desk-width screen, two at 1080px with the money column
+spanning, one on a phone.
+
+### 7.3 Two things the board is careful about
+
+**The RESOLVED stamp follows the database, not the run.** A finished run does
+not stamp a ticket; the board refetches `/api/tickets` and stamps whatever the
+shop now says is resolved. Since the team only calls `resolve_ticket` when
+nothing is left for a human, a stamp means the ticket is genuinely finished —
+on a fresh board all three stay open, waiting on approvals, and that is the
+honest picture.
+
+**A refusal is shown, not swallowed.** If `pay` refuses — no approval, already
+spent, would overdraw — the message comes back in `refused_because` and is
+shown in the error banner with the balance unmoved. The feed does the same with
+failed tool calls, tinting them and keeping the error text, because a refused
+payment is the most interesting line in a run.
+
+### 7.4 Checked, and not checked
+
+- `npm run build` — TypeScript strict (`noUnusedLocals`, `noUnusedParameters`,
+  `verbatimModuleSyntax`) and the production bundle both clean: 24 modules,
+  233 kB JS, 12 kB CSS.
+- The chain was run for real: Vite served the app, proxied `/api/tickets` and
+  `/api/cash` through to the backend, through MCP, to the database — shop date
+  2026-08-31, three open tickets, 3400.00.
+- **Not seen rendered.** Chrome was not reachable from this session, so no one
+  has looked at the page in a browser. The layout, the colours, and the
+  animations are unverified by eye.
