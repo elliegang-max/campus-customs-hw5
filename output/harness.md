@@ -942,3 +942,23 @@ payment is the most interesting line in a run.
 - **Not seen rendered.** Chrome was not reachable from this session, so no one
   has looked at the page in a browser. The layout, the colours, and the
   animations are unverified by eye.
+
+### 7.5 Wiring the two together
+
+The dashboard calls **http://localhost:8000** directly: `api.ts` prefixes every
+request with `API_BASE`, which defaults to that and can be overridden with
+`VITE_API_BASE`. The backend's CORS middleware already allows the Vite origin
+(`http://localhost:5173`, plus `127.0.0.1:5173` and the preview port `4173`), so
+the browser is permitted to make those calls. Setting `VITE_API_BASE=""` falls
+back to Vite's `/api` proxy instead — same-origin, no preflight — and both paths
+reach the same routes.
+
+Added with it, to make the roster readable at a glance: each agent now carries a
+**glyph** as well as a colour (Boss ✦, Inventory ▦, Accounting $, Facilities ⌂,
+Customer Service ✉) and a **status pill** — *idle*, *working*, *done* — worked
+out from the feed, with the ring reserved for whoever is working. The masthead
+became a **slim top bar**: the shop name, the shop's date, and the balance on one
+line above a single rule, so the columns below get the space.
+
+`output/design.md` explains the look and the reason for each choice, written
+against what is actually in `frontend/`.

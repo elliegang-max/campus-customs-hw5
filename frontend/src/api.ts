@@ -1,5 +1,9 @@
-// Every call the dashboard makes. Vite proxies /api to the backend on :8000,
-// so these stay relative and same-origin in development.
+// Every call the dashboard makes.
+//
+// The backend runs at http://localhost:8000 and allows this origin, so the
+// browser calls it directly. Set VITE_API_BASE to point somewhere else, or to
+// an empty string to go through Vite's /api proxy instead (same-origin, no
+// preflight) — both paths reach the same routes.
 
 import type {
   Approval,
@@ -10,14 +14,16 @@ import type {
   RunHandle,
 } from './types'
 
+export const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
+
 async function get<T>(url: string): Promise<T> {
-  const response = await fetch(url)
+  const response = await fetch(API_BASE + url)
   if (!response.ok) throw new Error(await describe(response))
   return response.json() as Promise<T>
 }
 
 async function post<T>(url: string, body?: unknown): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(API_BASE + url, {
     method: 'POST',
     headers: body ? { 'content-type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,

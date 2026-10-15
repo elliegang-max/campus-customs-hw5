@@ -72,6 +72,19 @@ Agents can only *propose* payments. To approve one, as a person:
 Then run the board again and the approved payment — and only that one — goes
 through. Every run appends to `output/audit_trail.json`.
 
+## The dashboard
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Opens on http://localhost:5173 and calls the API at http://localhost:8000, which
+allows that origin. `VITE_API_BASE` points it elsewhere; set it to an empty
+string to go through Vite's proxy instead. The look is explained in
+[output/design.md](output/design.md).
+
 ## The API
 
 ```bash

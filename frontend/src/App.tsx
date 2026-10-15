@@ -6,6 +6,7 @@ import { ApprovalSlip } from './components/ApprovalSlip'
 import { BalanceCard } from './components/BalanceCard'
 import { RunSummary } from './components/RunSummary'
 import { TicketTag } from './components/TicketTag'
+import type { AgentStatus } from './agents'
 import type { AgentEvent, Approval, BoardState, CashBalance, RunHandle } from './types'
 
 const POLL_MS = 1500
@@ -135,14 +136,24 @@ export default function App() {
     }
   }
 
-  // Whoever spoke last is the one working, so their ring glows.
-  const activeAgent = useMemo(() => {
-    if (!running) return null
-    for (let i = events.length - 1; i >= 0; i -= 1) {
-      const agent = events[i].agent ?? events[i].requested_by
-      if (agent) return agent
+  // Where each agent is in this run: started and not yet finished = working,
+  // finished at least once = done, never called = idle. The Boss is working
+  // from the moment the run starts, since it is the one that opens every run.
+  const agentStatuses = useMemo(() => {
+    const statuses: Record<string, AgentStatus> = {}
+    if (events.length > 0 && running) statuses.boss = 'working'
+    for (const event of events) {
+      const who = event.agent
+      if (!who) continue
+      if (event.event === 'agent_started') statuses[who] = 'working'
+      else if (event.event === 'agent_finished') statuses[who] = 'done'
     }
-    return 'boss'
+    if (!running) {
+      for (const key of Object.keys(statuses)) {
+        if (statuses[key] === 'working') statuses[key] = 'done'
+      }
+    }
+    return statuses
   }, [events, running])
 
   const pending = approvals.filter((a) => a.status === 'proposed')
@@ -152,15 +163,15 @@ export default function App() {
 
   return (
     <div className="desk">
-      <header className="masthead">
-        <div>
+      <header className="topbar">
+        <div className="topbar-left">
           <h1>Campus Customs</h1>
-          <p className="masthead-sub">
-            the back office desk
-            {board ? ` · shop date ${board.shop_date}` : ''}
+          <p className="topbar-sub">
+            back office desk
+            {board ? ` · ${board.shop_date}` : ''}
           </p>
         </div>
-        <div className="masthead-right">
+        <div className="topbar-right">
           {cash && (
             <BalanceCard
               balance={cash.balance}
@@ -223,7 +234,7 @@ export default function App() {
             The team
             {running && <span className="col-count live">live</span>}
           </h2>
-          <AgentRoster active={activeAgent} />
+          <AgentRoster statuses={agentStatuses} />
           <AgentFeed events={events} running={running} />
           {run?.status === 'failed' && (
             <p className="banner banner-error">run failed: {run.error}</p>

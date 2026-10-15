@@ -529,3 +529,29 @@ and `/api/cash` through the backend and MCP to the database. Port 8000 was still
 held by hw4's old server, so `VITE_API_TARGET` was added to point the proxy
 elsewhere for the test. Chrome was not reachable from the session, so **nobody
 has looked at the page rendered**.
+
+**Follow-up prompt** — 2026-10-15 _(the board was built but not pointed at the
+API, and the look was undocumented)_
+
+> Tell the front end to talk to your backend at http://localhost:8000. On the
+> backend, allow the Vite page origin (usually http://localhost:5173) so the
+> browser is allowed to call those routes. Start the board with: npm run dev
+> [...] Write output/design.md explaining the dashboard look I chose and why
+> [...] describe only what is actually in the frontend/ code.
+
+**What Claude did.** Pointed `api.ts` at `http://localhost:8000` through an
+`API_BASE` constant, overridable with `VITE_API_BASE` (empty string falls back
+to the Vite proxy). The CORS middleware already allowed `localhost:5173`, so
+nothing was needed on the backend side.
+
+Two parts of the design brief described things the code did not have, so rather
+than write them up as if it did, it built them: each agent now carries a glyph
+as well as a colour, and a status pill reading *idle*, *working* or *done*
+worked out from the feed; and the masthead became an actually slim top bar —
+shop name, date and balance on one line — instead of the tall header it was.
+`output/design.md` then describes only what is there, including the exact empty
+states quoted from the code.
+
+The board could not be started: hw4's dev server and API from 7 October still
+hold ports 5173 and 8000, and the sandbox refuses both stopping another
+project's processes and binding its ports.
