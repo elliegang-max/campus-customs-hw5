@@ -123,3 +123,23 @@ paragraph, and said that section numbers track the assignment's problems. Only
 one section exists so far — the hw5 problem list has not arrived, so everything
 typed to this point is project setup. A new section goes in as each problem
 starts.
+
+**Follow-up prompt** — 2026-10-14 _(the data pack that had been promised, now
+with the questions to answer about it)_
+
+> Open data/campus_customs.db and show me every table and its fields. Copy it to
+> data/campus_customs_new.db as the working copy. help me understand the three
+> open tickets and how they link to the other tables.
+
+**What Claude did.** The database in `data/` was still the hw4 storefront one,
+so it looked for the real pack and found it already unzipped at
+`~/Downloads/data-2/campus_customs.db` with the nine tables described in the
+brief. It installed that as the project original (the hw4 copy it replaced is
+still recoverable from `~/Desktop/data-2.zip`), kept it read-only, and
+regenerated the working copy. Then it dumped every table and all 21 rows and
+wrote `output/data_model.md`: field-by-field tables, a map of how `tickets`
+links through `sku`/`size`, `lease_id`, and `invoice_id`, and a walkthrough of
+the three open tickets. The finding that mattered: tickets 101 and 103 both
+queue behind one $840 invoice that is 3 days overdue, and with $3,400 in
+checking the invoice and the $2,400 rent fit together with $160 to spare — so
+the 12-hoodie restock ticket 103 needs cannot be paid for this week.

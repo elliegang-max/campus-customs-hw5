@@ -1,8 +1,9 @@
 # hw5
 
-Scaffold for the hw5 assignment. The shop rules are in [RULES.md](RULES.md); the
-problem list and the hw5 data pack are still to come. The layout below follows
-the conventions used in `hw3/` and `hw4/`.
+Scaffold for the hw5 assignment. The shop rules are in [RULES.md](RULES.md) and
+the database is walked through in [output/data_model.md](output/data_model.md);
+the problem list is still to come. The layout below follows the conventions used
+in `hw3/` and `hw4/`.
 
 ## Repository layout
 
@@ -34,6 +35,11 @@ To start the tickets over from scratch:
 ```bash
 ./scripts/reset_db.sh
 ```
+
+Nine tables — `desk`, `tickets`, `inventory`, `pricing`, `vendors`, `invoices`,
+`leases`, `cash_accounts`, `payments` — walked through in
+[output/data_model.md](output/data_model.md), along with how the three open
+tickets link to each other.
 
 ## Setup
 
