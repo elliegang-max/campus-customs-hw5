@@ -143,3 +143,19 @@ the three open tickets. The finding that mattered: tickets 101 and 103 both
 queue behind one $840 invoice that is 3 days overdue, and with $3,400 in
 checking the invoice and the $2,400 rent fit together with $160 to spare — so
 the 12-hoodie restock ticket 103 needs cannot be paid for this week.
+
+**Follow-up prompt** — 2026-10-14 _(the walkthrough existed, but the assignment
+wants a running write-up that grows problem by problem)_
+
+> Start output/harness.md. For each table, list the fields and one short line on
+> why that table matters for the agent. let's keep growing this harness file as
+> we work along through the problems.
+
+**What Claude did.** Created `output/harness.md` in the same shape as the hw3
+and hw4 harness files: a header fixing the setup that applies to every section
+(Portkey, `gpt-6-luna` only, the original-versus-working-copy split), then
+section 1 on the database — every table with its fields and a short *why it
+matters to the agent* line, ending on the three things the schema does not
+enforce and the tools therefore must. The convention is written into the header:
+one numbered section per problem, appended in order, earlier sections left as
+written.
