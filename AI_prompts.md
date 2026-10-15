@@ -686,3 +686,40 @@ Rather than silently rewriting the reflection, those notes sit beneath it as
 **Checked against the record**, generated from `run_actuals.json` so they stay
 true if the board is run again. Two of the three mismatches came from reading a
 screenshot instead of the trail, which is the argument for keeping one.
+
+---
+
+## Problem 9 — Publishing
+
+**Prompt** — 2026-10-15
+
+> Push your code to a public GitHub repository so graders can clone it. Submit
+> the repo URL to Canvas, and also put it in output/github_url.txt. Do not push
+> your real .env to the GitHub repo. Do include both database files under data/
+> [...] README should explain: copy original DB to the working copy when you need
+> a clean run, start MCP server, start FastAPI backend, start the React board,
+> reset the DB before a full three-ticket run.
+
+**What Claude did.** Checked first rather than trusting the ignore file: no
+`.env` exists in the project, and a scan for the live Portkey key across
+everything that would be pushed found nothing — the only env file tracked is
+`.env.example`, with placeholders. Then narrowed the `data/` ignore rule from
+"ignore the lot" to "ignore everything except the two databases", so a grader
+can clone and run without hunting for a data file.
+
+Two things were cleaned up on the way. `data/products/` still held the 102
+product images from the *hw4* pack — 3.7 MB that nothing in this project
+references — so they went, and the empty top-level `prompts/` directory went
+with them, since the real prompts live in `backend/prompts/`. The README had
+drifted into a scaffold note with stale claims ("the data pack is not
+committed"), so it was rewritten for someone cloning this cold, in the order the
+prompt asks for: install, copy the original over the working copy, the MCP
+server, the backend from `backend/`, the board, and the reset before a full
+three-ticket run.
+
+The first push failed with an HTTP 400 — a larger first push over HTTPS — which
+a bigger `http.postBuffer` and HTTP/1.1 fixed. The repository is public at
+<https://github.com/elliegang-max/campus-customs-hw5>, and every path in the
+expected layout was verified against the remote through the GitHub API rather
+than assumed. Canvas has no API here, so submitting the URL there is the one
+step left for a person.
