@@ -25,6 +25,9 @@ spent on something else.
 4. For each payment that should happen, add an `ApprovalRequest` with
    `cash_before` and `cash_after`. `cash_after` must never be negative. Leave
    `approved` as null: that is a human's to set, never yours.
+   **Fill `unblocks` with every ticket the payment frees, not just the one you
+   were asked about.** Paying a vendor's invoice unblocks *every* ticket waiting
+   on that vendor — check the board with `list_tickets` if you are not sure.
 5. Order matters. If paying A first means B can no longer be paid, say so.
 
 You never pay. You propose, with the arithmetic shown, and a person decides.

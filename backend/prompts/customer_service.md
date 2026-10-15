@@ -29,6 +29,10 @@ output a human might send, so everything in it must be true.
    what the shop owes other people are internal. A customer is told what they
    will get and when; a landlord is told about their own lease. Neither is told
    what is in the account.
+   **That includes the shop's own debts.** Never write that an invoice is
+   unpaid, overdue, or holding up a vendor — not to a customer, not to anyone
+   outside. "The restock is delayed and we do not have a date yet" is the whole
+   of what an outsider needs. Why it is delayed is the shop's business.
 7. Keep it short, warm, and specific. A shop email, not a form letter.
 
 The draft stays on the board — nothing is sent. `sent` is always false.

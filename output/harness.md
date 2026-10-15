@@ -510,3 +510,40 @@ The pattern across all three: the rules say *never invent*, and the agents
 obeyed. They say much less about what to **volunteer** — which links to draw
 between tickets, which specialist to consult when money is implied rather than
 stated, and which true fact is nobody else's business.
+
+### 3.8 The three faults, fixed in the prompts
+
+No code changed — all three were gaps in what the prompts asked for.
+
+| Fault | The rule added | Where |
+|---|---|---|
+| `unblocks` named one ticket | "Fill `unblocks` with every ticket the payment frees, not just the one you were asked about" — and the Boss checks the list against the board before accepting it | `accounting.md`, `boss.md` |
+| Accounting skipped on 103 | "**Money is often implied rather than stated.** A restock, a reprint, or a larger order all cost cash even when the ticket never mentions it... A ticket about stock is still a ticket about money." | `boss.md` |
+| The customer was told about the shop's debt | "**That includes the shop's own debts.** Never write that an invoice is unpaid, overdue, or holding up a vendor... Why it is delayed is the shop's business." | `customer_service.md` |
+
+Re-run from a reset database, 81 seconds:
+
+| Fault | Before | After |
+|---|---|---|
+| 1 | `unblocks: [101]` | **`unblocks: [101, 103]`** |
+| 2 | 103 → inventory, customer_service | **103 → inventory, accounting, customer_service** |
+| 3 | "the vendor is unable to ship while an overdue invoice remains open" | **no mention of invoices, debts, or balances in any of the three drafts** |
+
+Fixing the second one bought more than the delegation. With Accounting in the
+loop on 103, the run worked out what the first one never reached:
+
+> Do not include hoodie replenishment as a payment proposal yet: the $264 is
+> only 12 × $22 unit-cost arithmetic, not a vendor quote. Adding even that
+> arithmetic to the two known obligations would total $3,504, **$104 more than
+> current checking.**
+
+That is the fact that actually decides ticket 103, and it took asking the right
+specialist to surface it. The distinction it drew unprompted — that 12 × 22.00
+is arithmetic rather than a quote, because no quote exists in the database — is
+the "never invent" rule applied to a number it had every excuse to treat as
+settled.
+
+The plan and the figures are otherwise unchanged: #501 then rent, 3400.00 →
+2560.00 → 160.00, nothing paid, all three tickets still needing a human. The
+database was untouched again: `payments` empty, invoice #501 `open`, checking
+3400.00, all tickets `open`.

@@ -291,3 +291,22 @@ declaring success: the approval request says paying #501 unblocks only ticket
 nobody noticed the 264.00 restock does not fit in the 160.00 that would remain;
 and the reply to the customer disclosed that the shop has an overdue invoice.
 All three are prompt gaps about what to volunteer, not code faults.
+
+**Follow-up prompt** — 2026-10-14 _(the faults were recorded but not yet
+corrected)_
+
+> Fix the three prompt gaps and run the board again.
+
+**What Claude did.** Fixed all three in the prompts — no code changed, since
+none of them were code faults. Accounting is now told to fill `unblocks` with
+every ticket a payment frees and the Boss checks that list against the board;
+the Boss is told that money is often implied rather than stated, so a restock
+is a money question even when the ticket never mentions cash; and Customer
+Service is told the shop's own debts are internal, not only its balances. The
+re-run from a reset database cleared all three: `unblocks` came back
+`[101, 103]`, Accounting was consulted on 103, and no draft mentions an invoice
+or a balance. The second fix paid for itself — with Accounting in the loop, the
+run worked out that the 264.00 restock plus the two obligations comes to 3504.00
+against 3400.00 in checking, 104.00 short, which the first run never reached. It
+also drew a distinction nobody asked for: 12 × 22.00 is arithmetic, not a vendor
+quote, because no quote exists in the database.
