@@ -1147,12 +1147,72 @@ Honest list, all reproducible:
 - **The division of labour is a convention.** Every agent shares one toolset, so
   the Boss can call `pay` — and did, on ticket 101 (§8.3). The guardrail held;
   the role boundary did not. Per-agent toolsets would fix it.
-- **A duplicate proposal can be created once the first is approved.**
-  `propose_payment` suppresses a *pending* duplicate, not an approved one, so
-  approval #3 sits on the board unusable (§8.3).
+- ~~**A duplicate proposal can be created once the first is approved.**~~
+  Fixed in §10: `propose_payment` now treats *proposed or approved-but-unspent*
+  as live, so a second cannot be created behind a signed one.
 - **Two tickets cannot be closed inside this world.** 101 waits on a shipment
   that cannot arrive while the date is frozen; 103 needs a human to set a
   discount and more cash than is left (§8.4).
-- **The board has not been seen rendered.** The dashboard builds and its data
-  path is proven, but Chrome was unreachable from this session, so
-  `resolved_board.html` has screenshot slots rather than screenshots (§7.4).
+- ~~**The board has not been seen rendered.**~~ Seen, and photographed, in §10
+  — which is where two more bugs turned up.
+
+---
+
+## 10. Seeing it rendered
+
+The browser tooling in this session could not reach Chrome, and the usual ports
+were taken, so the board had been built, typechecked and proven against the API
+without anyone ever looking at it. That gap closed by driving the Chrome already
+installed on the machine from the command line:
+
+```bash
+cd backend && ../.venv/bin/uvicorn main:app --port 8012          # API
+cd frontend && VITE_API_BASE=http://localhost:8012 npx vite --port 5175
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless \
+  --window-size=1500,1150 --virtual-time-budget=9000 \
+  --screenshot=output/board_shots/ticket-101.png "http://localhost:5175/?ticket=101"
+```
+
+Two small additions made the shots worth taking, and both earn their place
+beyond screenshots: **`?ticket=101`** opens the board with that ticket picked,
+and the feed now **loads the most recent run on open** instead of sitting empty
+— the board is usually looked at after a run, not before one.
+
+### 10.1 The first screenshot failed, usefully
+
+It came back showing **"Failed to fetch"** and an empty board. The backend's
+CORS list named ports 5173 and 4173; the board was being served on 5175, because
+5173 was taken. Every call was blocked by the browser, and nothing in the
+TypeScript, the build, or the API tests could have caught it — only a browser
+can refuse a request for being the wrong origin.
+
+The fix is an origin *regex* rather than a list: any `localhost` or `127.0.0.1`
+port is allowed. Vite moves to 5174, 5175 and onward whenever a port is busy, so
+a fixed list is a trap. This is a development back office that only binds
+localhost — not an open policy on a public service.
+
+### 10.2 The second bug was visible rather than logged
+
+With data on screen, the approvals column showed **approval #3 — the dead
+duplicate from §8.3 — with a live Approve button on it.** Reading about it in a
+known-gaps list is one thing; seeing a button a person would obviously press,
+for a payment that `pay` would refuse, is another.
+
+Both halves were dealt with: `propose_payment` now counts an *approved but
+unspent* proposal as live, so a duplicate cannot be created behind a signed one;
+and the stale row was cleared the way the system intends, through
+`scripts/approve.py 3 --decline`, so the board shows it as **DECLINED · Shutong
+Gang** rather than quietly disappearing.
+
+### 10.3 What the board actually looks like
+
+`output/board_shots/ticket-{101,102,103}.png`, embedded in
+`resolved_board.html`. Everything §7 described is there: the slim top bar with
+the date and **$160.00** as the largest thing on the page, paper tags with their
+punched hole and thread, the green **RESOLVED** stamp sitting at an angle on
+ticket 102, the five agents with glyphs and *idle / done* pills, feed lines
+striped in each agent's colour, and receipt slips with torn edges reading
+**PAID · Shutong Gang · 2026-08-31**.
+
+The one thing a still image cannot show is the balance counting down, which only
+happens at the moment a payment is approved.

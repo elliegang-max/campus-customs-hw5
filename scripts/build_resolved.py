@@ -184,7 +184,7 @@ def shot_for(ticket_id: int) -> str:
             return (
                 f"<img src='board_shots/{candidate.name}' alt='The React board "
                 f"showing ticket {ticket_id}' loading='lazy'>"
-            )
+            )  # noqa: E501
     return f"""<div class="shot-missing">
       <p><strong>No screenshot yet for ticket {ticket_id}.</strong></p>
       <p>Start the board, work ticket {ticket_id}, and save the screenshot as
@@ -218,7 +218,8 @@ for record in records:
   <p class="meta">{e(record['type'])} · {e(record['requester'])} · {record['runs']} run(s)</p>
 
   <figure class="shot">{shot_for(record['id'])}
-    <figcaption>the React board, ticket #{record['id']}</figcaption>
+    <figcaption>the React board with ticket #{record['id']} selected — the feed
+      shows the most recent run, and the approvals column its final state</figcaption>
   </figure>
 
   <h3>Outcome</h3>

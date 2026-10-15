@@ -48,6 +48,7 @@ export const api = {
   approvals: () => get<Approval[]>('/api/approvals'),
   run: (ticketId: number) => post<RunHandle>(`/api/tickets/${ticketId}/run`),
   runStatus: (runId: string) => get<RunHandle>(`/api/runs/${runId}`),
+  recentEvents: (limit = 40) => get<EventPage>(`/api/events?limit=${limit}`),
   events: (runId: string, afterSeq: number) =>
     get<EventPage>(`/api/events?run_id=${runId}&after_seq=${afterSeq}&limit=200`),
   approve: (approvalId: number, approvedBy: string) =>

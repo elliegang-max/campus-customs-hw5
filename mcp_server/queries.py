@@ -196,20 +196,25 @@ def propose_payment(
         if balance is None:
             raise ValueError(f"no cash account named {account!r}")
 
-        # One pending proposal per obligation. Asking twice returns the first
-        # one rather than stacking duplicates: a human looking at nine identical
-        # approvals for the same invoice cannot tell which one is the real
-        # decision, and approving two of them is two payments.
+        # One live proposal per obligation. Asking twice returns the first one
+        # rather than stacking duplicates: a human looking at several identical
+        # approvals for the same invoice cannot tell which is the real decision,
+        # and approving two of them is two payments.
+        #
+        # "Live" means proposed *or already approved but not yet spent* — an
+        # earlier version only looked for a pending one, so once a human signed
+        # the first proposal a second could still be created behind it, and the
+        # board showed a payment that could never go through.
         pending = one(
             conn,
             "SELECT * FROM approvals WHERE kind = ? AND ref_id = ? AND account = ? "
-            "AND status = 'proposed' ORDER BY id LIMIT 1",
+            "AND status IN ('proposed', 'approved') ORDER BY id LIMIT 1",
             (kind, ref_id, account),
         )
         if pending is not None:
             return {
                 "approval_id": pending["id"],
-                "status": "proposed",
+                "status": pending["status"],
                 "already_proposed": True,
                 "kind": kind,
                 "ref_id": ref_id,

@@ -12,11 +12,18 @@ import type { AgentEvent, Approval, BoardState, CashBalance, RunHandle } from '.
 const POLL_MS = 1500
 const DEFAULT_APPROVER = 'Shutong Gang'
 
+/** `?ticket=101` opens the board with that ticket already picked. */
+function ticketFromUrl(): number | null {
+  const raw = new URLSearchParams(window.location.search).get('ticket')
+  const id = raw ? Number(raw) : NaN
+  return Number.isFinite(id) ? id : null
+}
+
 export default function App() {
   const [board, setBoard] = useState<BoardState | null>(null)
   const [cash, setCash] = useState<CashBalance | null>(null)
   const [approvals, setApprovals] = useState<Approval[]>([])
-  const [selected, setSelected] = useState<number | null>(null)
+  const [selected, setSelected] = useState<number | null>(ticketFromUrl)
   const [run, setRun] = useState<RunHandle | null>(null)
   const [events, setEvents] = useState<AgentEvent[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -45,6 +52,25 @@ export default function App() {
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  // Open on the last run's activity rather than an empty feed: the board is
+  // usually looked at after a run, not before one.
+  useEffect(() => {
+    let alive = true
+    void (async () => {
+      try {
+        const page = await api.recentEvents(40)
+        if (!alive || page.events.length === 0) return
+        lastSeq.current = page.latest_seq
+        setEvents(page.events)
+      } catch {
+        // A missing trail is not worth an error banner.
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [])
 
   // While a run is in flight, pull new events and watch for it to finish. The
   // events are the same records the audit trail keeps, so what the board shows

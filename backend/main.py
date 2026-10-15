@@ -97,13 +97,13 @@ app = FastAPI(
 )
 
 # The dashboard is served by Vite in development, on a different origin.
+# Any localhost port is allowed rather than a fixed list: Vite moves to 5174,
+# 5175 and so on when a port is taken, and a board that silently cannot reach
+# the API is a bad half-hour. This is a development back office that only ever
+# binds localhost — it is not an open CORS policy on a public service.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:4173",
-    ],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_methods=["*"],
     allow_headers=["*"],
 )

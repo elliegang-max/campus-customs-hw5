@@ -638,3 +638,27 @@ four real ones rather than closing on a clean note.
 session and hw4's servers still hold ports 5173 and 8000, so
 `resolved_board.html` renders a labelled slot per ticket: drop a PNG at
 `output/board_shots/ticket-<id>.png`, re-run the script, and it appears.
+
+**Follow-up prompt** — 2026-10-15 _(the screenshots were the last thing missing,
+and running the board was not possible)_
+
+> i can't run it though
+
+**What Claude did.** Ran it itself, on ports nothing else was using: the API on
+8012, Vite on 5175 with `VITE_API_BASE` pointed at it, and the Chrome already
+installed on the machine driven headlessly from the command line to capture
+`output/board_shots/ticket-{101,102,103}.png`. Two small features made the shots
+worth taking and are worth keeping anyway — `?ticket=101` opens the board on
+that ticket, and the feed loads the most recent run on open rather than sitting
+empty.
+
+Looking at the board for the first time found two bugs nothing else had. The
+first screenshot came back reading **"Failed to fetch"**: the backend's CORS list
+named port 5173, the board was on 5175 because 5173 was taken, and the browser
+blocked every call — something no typecheck or API test can catch. CORS now
+matches any localhost port. The second was visible rather than logged: the dead
+duplicate approval from the last problem was sitting in the column with a live
+Approve button on it. `propose_payment` now treats an approved-but-unspent
+proposal as live so the duplicate cannot be created, and the stale row was
+cleared through the proper path with `approve.py 3 --decline`, so it reads
+DECLINED rather than vanishing.

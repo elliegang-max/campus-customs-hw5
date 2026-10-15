@@ -533,9 +533,9 @@
       "reason": "Invoice 501 is 3 days overdue and payment may unblock ticket 101's restock.",
       "requested_by": "accounting",
       "requested_at": "2026-08-31",
-      "status": "proposed",
-      "approved_by": null,
-      "decided_at": null,
+      "status": "declined",
+      "approved_by": "Shutong Gang",
+      "decided_at": "2026-08-31",
       "payment_id": null
     }
   ],
