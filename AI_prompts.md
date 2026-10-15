@@ -6,8 +6,9 @@ own words, organised by problem.
 **Convention:** one section per problem. Each section records the problem number
 and title, the date I typed each prompt, at least one prompt I typed, and —
 where the first prompt did not get me what I needed — the follow-up prompt, with
-a one-line note on what was lacking. A short note on what Claude did follows each prompt. Sections are filled
-in as the assignment progresses; nothing is rewritten after the fact.
+a one-line note on what was lacking. A short note on what Claude did follows
+each prompt. Sections are filled in as the assignment progresses; nothing is
+rewritten after the fact.
 
 ---
 
@@ -23,8 +24,9 @@ in as the assignment progresses; nothing is rewritten after the fact.
 No assignment brief existed anywhere under `AI Foundation/`, so it asked for the
 hw5 problems rather than guessing at application code.
 
-**Follow-up prompt** — 2026-10-14 _(the first prompt only said where to work, not what to do —
-the data still had to be unpacked)_ _(with `~/Desktop/data-2.zip` attached)_
+**Follow-up prompt** — 2026-10-14 _(the first prompt only said where to work,
+not what to do — the data still had to be unpacked)_ _(with
+`~/Desktop/data-2.zip` attached)_
 
 > unzip so you have data/campus_customs.db
 
@@ -32,13 +34,13 @@ the data still had to be unpacked)_ _(with `~/Desktop/data-2.zip` attached)_
 first (the zip's root is `data-2/`, not `data/`, and it carried `__MACOSX/`
 resource-fork noise, which was excluded), checked that it held only `.jpg` and
 `.db` files, then moved `campus_customs.db` and `products/` into `hw5/data/`.
-The database has four tables — `catalogue` (102 products), `inventory` (612
-size rows), `users` (3), `chat_messages` (22) — and every `image_file_path` in
-the catalogue resolves to a file in `data/products/` (102 images). Added
-`data/` to `.gitignore` so the pack stays local, matching hw4.
+The database has four tables — `catalogue` (102 products), `inventory` (612 size
+rows), `users` (3), `chat_messages` (22) — and every `image_file_path` in the
+catalogue resolves to a file in `data/products/` (102 images). Added `data/` to
+`.gitignore` so the pack stays local, matching hw4.
 
-**Follow-up prompt** — 2026-10-14 _(the data pack was in place, but nothing said which copy of
-the database the tools should write to)_
+**Follow-up prompt** — 2026-10-14 _(the data pack was in place, but nothing said
+which copy of the database the tools should write to)_
 
 > That file is the original shop database. Tables include desk, tickets,
 > inventory, pricing, vendors, leases, cash_accounts, payments, and invoices.
@@ -57,7 +59,8 @@ the hw4 storefront schema — and none of the `desk` / `tickets` / `vendors` /
 `leases` / `cash_accounts` / `payments` / `invoices` tables described above, so
 the hw5 data pack still has to be supplied.
 
-**Follow-up prompt** — 2026-10-14 _(the rules of the shop, given before the problem list)_
+**Follow-up prompt** — 2026-10-14 _(the rules of the shop, given before the
+problem list)_
 
 > Rules of this shop
 >
