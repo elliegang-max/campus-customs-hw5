@@ -3,8 +3,13 @@
 .env.*
 !.env.example
 
-# --- Local-only data pack (NOT for git): database + product images ---------
-data/
+# --- The data pack ---------------------------------------------------------
+# Both databases ARE committed, so a grader can clone and run without hunting
+# for a data file: the pristine original and the working copy the tools write
+# to. Nothing else from data/ goes in.
+data/*
+!data/campus_customs.db
+!data/campus_customs_new.db
 
 # Dependencies / build output
 .venv/
