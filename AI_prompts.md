@@ -159,3 +159,25 @@ matters to the agent* line, ending on the three things the schema does not
 enforce and the tools therefore must. The convention is written into the header:
 one numbered section per problem, appended in order, earlier sections left as
 written.
+
+**Follow-up prompt** — 2026-10-14 _(the first build step: the tools every agent
+will share)_
+
+> Write an MCP server in mcp_server/ using FastMCP that will talk to
+> data/campus_customs_new.db. You don't need to connect or run it yet. just so
+> you know every agent in this hw uses the tools in this MCP server. We will add
+> more tools to it later. for now write three tools you know you will need for
+> the tickets in the database. Keep the names clear. Never invent any data, only
+> use information in the database.
+
+**What Claude did.** Wrote `mcp_server/` as three files rather than one:
+`server.py` (the FastMCP instance and tool docstrings, which are what the agent
+actually reads), `queries.py` (the SQL as plain functions), and `db.py`
+(connections). The split meant the SQL could be run against the real database
+and checked before any agent or MCP client existed — neither FastMCP package was
+installed. Two rules went into `db.py` so they hold for every tool ever added:
+tools open the working copy, never the original, and read tools open it
+read-only so a SELECT-only tool cannot write even by accident. The three tools
+are `list_tickets`, `get_ticket`, and `get_vendor_status` — one per question the
+agent must ask about any ticket. Unknown ids raise and list the ids that do
+exist, so a miss can never look like an empty result worth filling in.

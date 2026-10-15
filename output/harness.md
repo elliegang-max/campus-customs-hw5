@@ -173,3 +173,91 @@ Three gaps the tools have to close, because SQLite will not:
 - **`payments.kind` + `ref_id` is an unenforced polymorphic pointer.**
   `kind='invoice'` means `ref_id` is an `invoices.id`, `kind='rent'` means a
   `leases.id`. Nothing in the schema says so, so the tool must be consistent.
+
+---
+
+## 2. The MCP server
+
+`mcp_server/` — a FastMCP server named `campus-customs`. **Every agent in this
+assignment reaches the shop through these tools; no agent opens the database
+itself.** That is what keeps the house rules enforceable: a rule written only in
+a prompt is a suggestion, but a rule written into a tool holds for every agent
+that calls it.
+
+### 2.1 Three files, so the SQL is testable without a client
+
+| File | Holds |
+|---|---|
+| `server.py` | the FastMCP instance and the tool definitions — docstrings are the agent-facing contract |
+| `queries.py` | the SQL behind each tool, as plain functions |
+| `db.py` | connections, path resolution, the read-only guard |
+
+The split exists so the queries can be exercised directly, without installing an
+MCP client or standing up a server — which is how the three tools below were
+checked against the real data before any agent existed.
+
+### 2.2 Two rules enforced in `db.py`, not in every tool
+
+- **Tools talk to the working copy.** `data/campus_customs_new.db` by default,
+  overridable with `CAMPUS_CUSTOMS_DB` for tests. The pristine original is never
+  opened by a tool.
+- **Read tools open the file read-only** (`file:...?mode=ro`). A SELECT-only
+  tool *cannot* write, even by mistake — SQLite refuses at the connection. Tools
+  that spend money or resolve a ticket will pass `readonly=False` and carry
+  their own approval step.
+
+### 2.3 The three tools
+
+Each answers one question the agent has to ask about every ticket.
+
+**`list_tickets(status="open")` — what needs doing?**
+Returns the board plus `today` from the desk, in the same payload. The date
+travels with the tickets deliberately: every overdue judgement is made against
+`desk.date_today`, and an agent that has to make a second call to learn the date
+is an agent that will sometimes skip it and reach for the real-world clock.
+
+**`get_ticket(ticket_id)` — what does this ticket touch?**
+Resolves the three nullable link columns in one call, and only the links the
+ticket actually has: `sku`+`size` → `pricing` and the `inventory` rows (with
+`on_hand` and `short_by` for the size asked for), `lease_id` → the lease with
+`days_until_due`, `invoice_id` → the invoice with `days_overdue` and the vendor
+behind it. Cash balances come along because no decision can exceed them. Sizes
+come back smallest-first rather than alphabetically.
+
+**`get_vendor_status(vendor_id)` — will they ship, and when?**
+`lead_days` is read from the `vendors` table, never assumed. `can_ship` is false
+while the vendor has any open unpaid invoice — the house rule that blocks
+restocks — and `blocked_reason` names the invoices responsible.
+`earliest_ship_date_if_ordered_today` is the shop's date plus the vendor's lead
+days.
+
+### 2.4 Never inventing data
+
+- Only columns that were read come back. Nothing is defaulted or filled in from
+  the model's own knowledge.
+- An unknown id **raises**, and the error lists the ids that do exist
+  (`no ticket with id 999; tickets on the board: [101, 102, 103]`). A tool that
+  quietly returned an empty result would invite the agent to make something up.
+- The only computed values are date arithmetic and sums over rows just read, and
+  each is named so it reads as derived: `days_overdue`, `short_by`,
+  `earliest_ship_date_if_ordered_today`.
+
+### 2.5 What these three tools say about the board today
+
+Running them against the untouched working copy, with no model involved:
+
+| Ticket | What the tools report |
+|---|---|
+| 101 | `on_hand` 0, `short_by` 1; invoice #501 **3 days overdue**, vendor Bulldog Print Co |
+| 102 | lease 1, rent 2400.00, **due in 2 days**; checking holds 3400.00 |
+| 103 | `on_hand` 8 of 20, `short_by` 12; cost 22.00 against list 58.00 |
+| vendor 1 | `can_ship` **false** — blocked by #501; would otherwise ship by 2026-09-05 |
+
+Tickets 101 and 103 both queue behind the same unpaid invoice. Nothing here
+needed a model to work out.
+
+### 2.6 Deferred
+
+Still to come, in later problems: paying an invoice and paying rent (both behind
+human approval, both refusing to overdraw), resolving a ticket, and drafting
+replies that stay on the board.

@@ -1,5 +1,11 @@
 # Python dependencies — install with:
 #   python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+
+# The MCP server. Either package provides FastMCP; mcp_server/server.py imports
+# the standalone one first and falls back to the copy in the official SDK.
+fastmcp
+
+# Agents (every call goes through Portkey, model gpt-6-luna only).
 openai
 pydantic
 python-dotenv

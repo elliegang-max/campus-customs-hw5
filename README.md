@@ -15,6 +15,10 @@ hw5/
 ├── .env.example        # environment template (copy to .env)
 ├── .gitignore
 ├── README.md
+├── mcp_server/         # FastMCP server — every agent's only route to the db
+│   ├── server.py       # the tools
+│   ├── queries.py      # the SQL behind them
+│   └── db.py           # connections (reads open read-only)
 ├── prompts/            # system / task prompts
 ├── scripts/reset_db.sh # restore the working db from the original
 ├── data/               # data pack (not committed)
