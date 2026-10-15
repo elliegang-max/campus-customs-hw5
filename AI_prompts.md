@@ -220,3 +220,24 @@ database, and that a raise inside a tool reaches the caller as a readable error
 rather than an empty result. Claude Code picks up a new `.mcp.json` when the
 project is approved and reloaded, so the tools appear in the next session
 rather than this one.
+
+**Follow-up prompt** — 2026-10-14 _(the server was registered but had never been
+proven to return the database's own values)_
+
+> test each of your three MCP tools. Save the evidence in output/mcp_smoke.json,
+> and for each test include the prompt I asked you, the tool name, and the tool
+> output, which must match the values in data/campus_customs_new.db.
+
+**What Claude did.** Wrote `scripts/mcp_smoke.py`, which starts the server as a
+subprocess over stdio from the committed `.mcp.json`, calls all three tools, and
+checks every value against the database re-read through its own `sqlite3`
+connection — 22 comparisons, all passing, each written to
+`output/mcp_smoke.json` with the prompt, the tool name and arguments, the full
+output, and both values side by side. The run found a real bug on the way:
+making the relative command absolute with `Path.resolve()` followed
+`.venv/bin/python` through its symlink to the system interpreter, which has no
+`fastmcp`, so the server died at startup and the client reported only
+"Connection closed". The evidence also records the database's SHA-256 before and
+after, showing the read-only tools left it untouched. Note the tools were called
+through this client rather than through Claude's own MCP connection, which had
+not picked up `.mcp.json` yet in this session.

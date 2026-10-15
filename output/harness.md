@@ -324,3 +324,37 @@ subprocess over stdio, not just imported in-process:
 
 That last row is the one worth checking: a raise inside a tool has to arrive at
 the agent as an error it can read, not as a silent empty result.
+
+### 2.9 Smoke test: the tools against the database
+
+`scripts/mcp_smoke.py` → `output/mcp_smoke.json`. **22 checks, all passing.**
+
+The test is deliberately not an in-process import of the tool functions. It
+starts the server the way a client does — as a subprocess over stdio, using the
+command from the committed `.mcp.json` — then calls each tool and compares every
+value it returns against `data/campus_customs_new.db`, re-read with its own
+`sqlite3` connection. Agreement between a tool and the module it calls would
+prove nothing; agreement between the tool's answer and an independent read of
+the file is the thing worth evidencing.
+
+| Tool | Checks | What was compared |
+|---|---|---|
+| `list_tickets` | 4 | `today` against `desk.date_today`, the open count, the ticket ids, and every ticket row field-for-field |
+| `get_ticket` | 11 | the ticket row, pricing, `on_hand`, `short_by`, the invoice's amount / status / due date, `days_overdue` recomputed from the dates, the vendor behind it, and cash |
+| `get_vendor_status` | 7 | the vendor row, `lead_days`, the open invoice ids and total, `can_ship`, and the ship date recomputed as `today + lead_days` |
+
+Each entry in the evidence file records the prompt that asked for the test, the
+tool name and arguments, the full tool output, and the list of comparisons with
+both values side by side — so a reader can see what the tool said *and* what the
+database says, rather than taking a pass/fail on trust.
+
+Two things the run also establishes:
+
+- **The database is unchanged.** Its SHA-256 is recorded in the evidence and
+  re-checked after the run. Read-only tools really are read-only.
+- **The committed `.mcp.json` command works.** A bug surfaced here and was worth
+  keeping: resolving the relative command with `Path.resolve()` followed
+  `.venv/bin/python` through its symlink to the *system* interpreter, which has
+  no `fastmcp`, and the server died at startup with nothing but "Connection
+  closed" at the client. The fix is to make the path absolute without resolving
+  symlinks. Worth remembering for any venv-based MCP command.
