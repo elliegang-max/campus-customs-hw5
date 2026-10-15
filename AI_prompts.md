@@ -56,3 +56,33 @@ from `data-2.zip` holds `catalogue`, `inventory`, `users`, and `chat_messages` �
 the hw4 storefront schema — and none of the `desk` / `tickets` / `vendors` /
 `leases` / `cash_accounts` / `payments` / `invoices` tables described above, so
 the hw5 data pack still has to be supplied.
+
+**Follow-up prompt** _(the rules of the shop, given before the problem list)_
+
+> Rules of this shop
+>
+> * The field `desk.date_today` is "today" for the shop. Use this date to
+>   determine what is overdue.
+> * Vendor lead times come from the `vendors` table.
+> * A vendor will not ship new product while they still have an open unpaid
+>   invoice.
+> * Human approval is required for any payments. Points will be deducted if this
+>   is not done. If payment is made, make sure to update the relevant table.
+> * If there is not enough cash, the pay tool must refuse — no negative balances.
+> * Cash only goes out in this homework — we did not model revenue, so no money
+>   comes in.
+> * Before a full run to resolve the tickets, make sure to reset the database to
+>   the original values.
+> * Do not email customers or call real vendors. Drafts stay on the board.
+>
+> Use your `PORTKEY_API_KEY` for AI calls. For this assignment, use only
+> `gpt-6-luna` through Portkey for every agent. Multi-agent chats burn tokens
+> fast. Points will be deducted if any other model shows up in your code or runs.
+
+**What Claude did.** Wrote the rules into `RULES.md` — grouped as shop, money,
+running, and models — and linked it from the README so every tool and agent is
+built against one list rather than against memory of a chat message. It also
+checked where the Portkey credentials come from: `~/.config/ai-keys/keys.env`
+already has both `PORTKEY_API_KEY` and `PORTKEY_BASE_URL`, so no local `.env` is
+needed, and recorded that resolution order in `RULES.md`. No code yet — the hw5
+data pack and the problem list are still to come.
