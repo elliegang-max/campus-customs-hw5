@@ -28,6 +28,7 @@ hw5/
 │   ├── settings.py     # the only place a model client is made (gpt-6-luna)
 │   ├── toolset.py      # the shared MCP toolset
 │   ├── models.py       # the types the team passes around
+│   ├── main.py         # the FastAPI app the dashboard calls
 │   ├── run_board.py    # CLI: python -m backend.run_board
 │   └── prompts/        # one prompt per agent, plus _shared.md house rules
 ├── prompts/            # system / task prompts
@@ -70,6 +71,25 @@ Agents can only *propose* payments. To approve one, as a person:
 
 Then run the board again and the approved payment — and only that one — goes
 through. Every run appends to `output/audit_trail.json`.
+
+## The API
+
+```bash
+./.venv/bin/python -m uvicorn backend.main:app --reload --port 8000
+```
+
+| Route | Does |
+| --- | --- |
+| `GET /api/tickets` | the three tickets, each open or resolved |
+| `POST /api/tickets/{id}/run` | runs the agent team on one ticket, in the background |
+| `GET /api/runs/{run_id}` | where that run got to, and its review |
+| `GET /api/events` | recent agent events — who said what, which tools ran |
+| `GET /api/approvals` | payments the agents have proposed |
+| `POST /api/approvals/{id}` | **a human approves — the only route that changes cash** |
+| `GET /api/cash` | the checking balance |
+| `POST /api/reset` | restore the database from the original |
+
+Interactive docs at `/docs` once it is running.
 
 Nine tables — `desk`, `tickets`, `inventory`, `pricing`, `vendors`, `invoices`,
 `leases`, `cash_accounts`, `payments` — walked through in

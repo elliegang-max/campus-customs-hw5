@@ -422,3 +422,46 @@ the tee is out of stock and the vendor is blocked, with the in-stock
 counterfactual written out; and `propose_payment` is deliberately absent from
 103, because 264.00 is arithmetic off the pricing table rather than a bill, and
 proposing it would ask a human to approve a purchase the balance cannot cover.
+
+---
+
+## Problem 5 — The API
+
+**Prompt** — 2026-10-15
+
+> Your React frontend dashboard (the next problem) needs a backend it can call.
+> In backend/main.py, use FastAPI and add routes that do the following: return
+> the three tickets and whether each is open or resolved; take a ticket id and
+> run the agent team on that ticket; return recent agent events — what each
+> agent said and which tools they used — so the board can refresh; approve a
+> payment or purchase after a human clicks approve (agents only prepare the pay;
+> this route is what actually changes cash); return the current checking balance
+> from cash_accounts; reset the database to the original values when you want to
+> try a fresh run.
+
+**What Claude did.** Wrote `backend/main.py` with those six routes plus three
+the dashboard will need to use them (`GET /api/runs/{id}`, `GET /api/approvals`,
+`GET /api/health`). Every route goes through the MCP server, the same tools the
+agents use, with one deliberate exception: `/api/reset` copies a file, which is
+an operator action on the database rather than a fact about the shop.
+
+Two design calls. A board run takes a minute or two, so the run route returns
+`202` with a run id immediately and the team works in the background while the
+dashboard polls `/api/events`; a second run while one is in flight gets `409`,
+because the team shares one database. And the approval route is where cash
+actually moves — it records the approval against the person who gave it, then
+calls `pay`, and when `pay` refuses the refusal comes back in `refused_because`
+with the balance untouched rather than as a 500.
+
+Running it for real found two bugs that the CLI could never have shown.
+`list_approvals` failed on a freshly reset board — the `approvals` table is
+created on first write, but reading opens the file read-only, so the first thing
+a dashboard asks for after a reset returned "no such table". And the audit
+sequence numbers restarted with every process, which would make old records look
+new to a dashboard polling with `after_seq`. A third was caught before it could
+bite: the audit run id was fixed at import, so every run served by one process
+would have shared it.
+
+Every route was then exercised against the running server, including the
+guardrails: approving paid 3400.00 → 2560.00 → 160.00, and approving a repeat of
+the same rent came back `paid: false` with the cash unchanged.

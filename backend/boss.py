@@ -119,12 +119,22 @@ DEFAULT_INSTRUCTION = (
 )
 
 
-async def review_board(instruction: str = DEFAULT_INSTRUCTION) -> BoardReview:
+async def review_board(
+    instruction: str = DEFAULT_INSTRUCTION, *, new_run: bool = True
+) -> BoardReview:
     """Run the team over the open tickets and return the Boss's review.
 
-    Nothing here writes to the database or pays anything: the tools are
-    read-only, and payments come back as `ApprovalRequest`s for a human.
+    The team may now proposes payments and write drafts, but it still cannot
+    move money: `pay` refuses without a human approval already recorded.
+
+    Args:
+        instruction: What the Boss should work on.
+        new_run: Start a fresh audit run id. The API server sets this false
+            when it has already opened one so it can report the id to the
+            browser before the run finishes.
     """
+    if new_run:
+        audit.start_run()
     audit.append("run_started", instruction=audit.summarise(instruction))
     async with boss_agent:  # opens the shared MCP server once for the whole run
         try:

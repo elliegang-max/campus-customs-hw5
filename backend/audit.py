@@ -32,13 +32,33 @@ from .settings import PROJECT_ROOT
 
 AUDIT_PATH = PROJECT_ROOT / "output" / "audit_trail.json"
 
-#: Ties every record from one board run together.
+#: Ties every record from one board run together. A long-lived process (the
+#: API server) works several boards, so this is reset per run rather than fixed
+#: at import — otherwise every run in a day's serving would share one id.
 _run_id = uuid.uuid4().hex[:12]
 _sequence = 0
 
 
+def start_run() -> str:
+    """Begin a new run and return its id."""
+    global _run_id
+    _run_id = uuid.uuid4().hex[:12]
+    return _run_id
+
+
 def run_id() -> str:
     return _run_id
+
+
+def read_all() -> list[dict[str, Any]]:
+    """The whole trail, oldest first. Empty when nothing has run yet."""
+    if not AUDIT_PATH.exists():
+        return []
+    try:
+        loaded = json.loads(AUDIT_PATH.read_text() or "[]")
+    except json.JSONDecodeError:
+        return []
+    return loaded if isinstance(loaded, list) else []
 
 
 def _now() -> str:
@@ -53,6 +73,11 @@ def append(event: str, **fields: Any) -> dict[str, Any]:
     nothing, and a half-written line can never leave it unparseable.
     """
     global _sequence
+    if _sequence == 0:
+        # Continue the file's numbering rather than starting at 1 again. The
+        # dashboard polls with `after_seq`, so a sequence that restarts with
+        # every process would make old records look new.
+        _sequence = max((r.get("seq", 0) for r in read_all()), default=0)
     _sequence += 1
 
     record = {

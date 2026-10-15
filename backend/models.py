@@ -168,3 +168,125 @@ class BoardReview(BaseModel):
 
 
 MoneyAssessment.model_rebuild()
+
+
+# --- What the API hands the dashboard --------------------------------------
+#
+# The dashboard never talks to the database, and neither does this API except
+# through the MCP server. These are the shapes that cross the wire.
+
+
+class TicketSummary(BaseModel):
+    """One row of the board."""
+
+    id: int
+    type: str
+    requester: str
+    subject: str
+    status: str
+    sku: str | None = None
+    size: str | None = None
+    qty: int | None = None
+    notes: str | None = None
+    created_at: str
+
+
+class BoardState(BaseModel):
+    shop_date: str = Field(description="desk.date_today — the shop's own date.")
+    tickets: list[TicketSummary]
+    open_count: int
+    resolved_count: int
+
+
+class CashBalance(BaseModel):
+    account: str
+    balance: float
+    as_of: str = Field(description="The date the balance was last written.")
+
+
+class ApprovalSummary(BaseModel):
+    """A payment waiting on a person, or one already decided."""
+
+    id: int
+    kind: str
+    ref_id: int
+    amount: float
+    account: str
+    reason: str | None = None
+    requested_by: str
+    status: str = Field(description="proposed | approved | declined | used")
+    approved_by: str | None = None
+    decided_at: str | None = None
+
+
+class ApprovalDecision(BaseModel):
+    """What a human sends when they click approve."""
+
+    approved_by: str = Field(description="The person deciding. Recorded on the payment.")
+    decision: Literal["approved", "declined"] = "approved"
+    pay_now: bool = Field(
+        True, description="Execute the payment immediately on approval."
+    )
+
+
+class PaymentResult(BaseModel):
+    """What changed when money actually moved."""
+
+    approval_id: int
+    decision: str
+    paid: bool
+    payment_id: int | None = None
+    amount: float | None = None
+    cash_before: float | None = None
+    cash_after: float | None = None
+    settled: str | None = None
+    refused_because: str | None = Field(
+        None, description="Set when the pay tool refused — the guardrail talking."
+    )
+
+
+class RunHandle(BaseModel):
+    """A board run, started in the background."""
+
+    run_id: str
+    ticket_id: int | None = None
+    status: Literal["running", "finished", "failed"]
+    started_at: str
+    finished_at: str | None = None
+    error: str | None = None
+    review: BoardReview | None = None
+
+
+class AgentEvent(BaseModel):
+    """One step of an agent loop, as the audit trail recorded it."""
+
+    run_id: str
+    seq: int
+    at: str
+    event: str
+    agent: str | None = None
+    tool: str | None = None
+    asked: str | None = None
+    requested_by: str | None = None
+    delegated_by: str | None = None
+    ticket_id: int | None = None
+    ok: bool | None = None
+    error: str | None = None
+    ms: int | None = None
+    detail: str | None = Field(
+        None, description="The prompt, question, or tool result, trimmed for display."
+    )
+
+
+class EventPage(BaseModel):
+    events: list[AgentEvent]
+    latest_seq: int = Field(description="Poll again with after_seq set to this.")
+    total: int
+
+
+class ResetResult(BaseModel):
+    reset: bool
+    shop_date: str
+    cash: float
+    tickets: list[TicketSummary]
+    note: str

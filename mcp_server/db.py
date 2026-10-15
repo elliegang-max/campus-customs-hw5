@@ -59,6 +59,31 @@ CREATE TABLE IF NOT EXISTS drafts (
 """
 
 
+#: Paths whose extra tables are known to exist, keyed to the file's mtime. A
+#: reset replaces the file and changes the mtime, so the check runs again.
+_ensured: dict[Path, float] = {}
+
+
+def ensure_extra_schema(path: Path) -> None:
+    """Create `approvals` and `drafts` if this copy of the database lacks them.
+
+    Read tools open the file read-only and so cannot create anything, which
+    would make `list_approvals` fail outright on a freshly reset database —
+    the tables live only on the working copy. Creating them here means a reset
+    leaves an empty board rather than a broken one.
+    """
+    stamp = path.stat().st_mtime
+    if _ensured.get(path) == stamp:
+        return
+    conn = sqlite3.connect(path)
+    try:
+        conn.executescript(EXTRA_SCHEMA)
+        conn.commit()
+    finally:
+        conn.close()
+    _ensured[path] = path.stat().st_mtime
+
+
 @contextmanager
 def connect(readonly: bool = True) -> Iterator[sqlite3.Connection]:
     """Open the working copy with rows that behave like dicts."""
@@ -69,13 +94,12 @@ def connect(readonly: bool = True) -> Iterator[sqlite3.Connection]:
             "the working copy from the original"
         )
 
+    ensure_extra_schema(path)
     uri = f"file:{path}?mode=ro" if readonly else f"file:{path}"
     conn = sqlite3.connect(uri, uri=True)
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA foreign_keys = ON")
-        if not readonly:
-            conn.executescript(EXTRA_SCHEMA)
         yield conn
         if not readonly:
             conn.commit()
