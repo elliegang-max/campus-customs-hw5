@@ -465,3 +465,24 @@ would have shared it.
 Every route was then exercised against the running server, including the
 guardrails: approving paid 3400.00 → 2560.00 → 160.00, and approving a repeat of
 the same rent came back `paid: false` with the cash unchanged.
+
+**Follow-up prompt** — 2026-10-15 _(the API existed but had only ever been
+started as a package from the project root, and the routes were not listed
+plainly)_
+
+> From the backend/ folder, start the server with: uvicorn main:app --reload
+> --port 8000. This turns on your backend at http://localhost:8000 so the
+> frontend dashboard can call those routes. In output/harness.md, list each
+> route in one line (what URL / what it does).
+
+**What Claude did.** That exact command could not have worked: `main.py` used
+relative imports, so loaded as a top-level module from inside `backend/` it had
+no package to resolve them against. It now puts the project root on `sys.path`
+when `__package__` is empty and imports `backend.*` absolutely, so both
+`uvicorn main:app` from `backend/` and `uvicorn backend.main:app` from the root
+work. Verified by starting it the way the prompt asks and calling the routes.
+
+Port 8000 itself is held by hw4's uvicorn, still running from 7 October.
+Stopping another project's process and binding its port were both refused by the
+sandbox, so the server was proved on a free port instead and the stale process
+left alone for the user to stop. The harness now lists every route on one line.

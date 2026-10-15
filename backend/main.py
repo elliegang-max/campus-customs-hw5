@@ -1,5 +1,12 @@
 """The API the dashboard calls.
 
+Start it from this folder, the way the dashboard expects:
+
+    cd backend
+    uvicorn main:app --reload --port 8000
+
+or from the project root as a package:
+
     ./.venv/bin/python -m uvicorn backend.main:app --reload --port 8000
 
 Two rules shape this file:
@@ -31,9 +38,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastmcp import Client
 from fastmcp.client.transports import StdioTransport
 
-from . import audit
-from .boss import review_board
-from .models import (
+# Run as `uvicorn main:app` from inside backend/, this file is a top-level
+# module with no package around it, so the project root is not on the path and
+# `backend.*` would not import. Put it there before the rest of the imports.
+if __package__ in (None, ""):  # pragma: no cover - depends how it was started
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from backend import audit
+from backend.boss import review_board
+from backend.models import (
     AgentEvent,
     ApprovalDecision,
     ApprovalSummary,
@@ -45,7 +58,7 @@ from .models import (
     RunHandle,
     TicketSummary,
 )
-from .settings import PROJECT_ROOT
+from backend.settings import PROJECT_ROOT
 
 ORIGINAL_DB = PROJECT_ROOT / "data" / "campus_customs.db"
 WORKING_DB = PROJECT_ROOT / "data" / "campus_customs_new.db"

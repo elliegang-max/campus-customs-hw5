@@ -766,25 +766,43 @@ rendered**. If something is off visually, that is why.
 
 ## 6. The API
 
-`backend/main.py` — FastAPI, for the dashboard to call.
+`backend/main.py` — FastAPI, for the dashboard to call. Started from the
+`backend/` folder:
 
 ```bash
-./.venv/bin/python -m uvicorn backend.main:app --reload --port 8000
+cd backend
+uvicorn main:app --reload --port 8000
 ```
 
-### 6.1 The routes
+It serves on **http://localhost:8000**, which is where the dashboard looks.
+(From the project root the same app is `backend.main:app`. `main.py` puts the
+project root on `sys.path` when it is loaded as a top-level module, so both
+spellings work.)
 
-| Route | Does | Through |
-|---|---|---|
-| `GET /api/tickets` | the three tickets, each open or resolved, with the shop's date | `list_tickets` |
-| `GET /api/tickets/{id}` | one ticket with every link resolved | `get_ticket` |
-| `POST /api/tickets/{id}/run` | runs the agent team on that ticket | the team |
-| `GET /api/runs/{run_id}` | where a run got to, and its review when it finishes | — |
-| `GET /api/events` | recent agent events: what each agent said, which tools ran | the audit trail |
-| `GET /api/approvals` | payments the agents proposed, and what became of them | `list_approvals` |
-| `POST /api/approvals/{id}` | **a human approves — the only route that changes cash** | `approve_payment` + `pay` |
-| `GET /api/cash` | the checking balance | `get_ticket` |
-| `POST /api/reset` | restore the working copy from the original | a file copy |
+### 6.1 The routes, one line each
+
+- **`GET /api/health`** — is the API up, and can it reach the shop.
+- **`GET /api/tickets`** — the three tickets, each marked open or resolved, with the shop's date.
+- **`GET /api/tickets/{id}`** — one ticket with every link resolved: stock, pricing, invoice, lease, cash.
+- **`POST /api/tickets/{id}/run`** — runs the agent team on that ticket; returns a run id straight away.
+- **`GET /api/runs/{run_id}`** — where that run got to, and its review once it finishes.
+- **`GET /api/events`** — recent agent events: what each agent said and which tools it used, for the board to refresh.
+- **`GET /api/approvals`** — payments the agents have proposed, and what became of each.
+- **`POST /api/approvals/{id}`** — a human approves or declines; **the only route that changes cash**.
+- **`GET /api/cash`** — the current checking balance from `cash_accounts`.
+- **`POST /api/reset`** — restore the database to the original values for a fresh run.
+
+Which tool each one goes through:
+
+| Route | Through |
+|---|---|
+| `/api/tickets`, `/api/health` | `list_tickets` |
+| `/api/tickets/{id}`, `/api/cash` | `get_ticket` |
+| `/api/tickets/{id}/run`, `/api/runs/{id}` | the agent team |
+| `/api/events` | the audit trail |
+| `/api/approvals` | `list_approvals` |
+| `POST /api/approvals/{id}` | `approve_payment`, then `pay` |
+| `/api/reset` | a file copy — the one route that is not MCP |
 
 **Everything goes through MCP**, the same tools the agents use — there is no
 second query layer in the API. The single exception is `/api/reset`, which

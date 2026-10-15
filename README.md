@@ -75,8 +75,12 @@ through. Every run appends to `output/audit_trail.json`.
 ## The API
 
 ```bash
-./.venv/bin/python -m uvicorn backend.main:app --reload --port 8000
+cd backend
+uvicorn main:app --reload --port 8000
 ```
+
+Serves on http://localhost:8000, where the dashboard looks. From the project
+root the same app is `backend.main:app`.
 
 | Route | Does |
 | --- | --- |
