@@ -391,3 +391,34 @@ empty Actual box that keeps what is typed in it in browser storage. Cash and
 Reflection are present and marked "coming later". The page has no external
 references of any kind. Its structure was verified; Chrome was not reachable
 from the session, so it has not been looked at rendered.
+
+**Follow-up prompt** — 2026-10-15 _(the Expected sections were prose; this gave
+the shape they should follow — first call, workflow, tools, and what is
+skipped)_
+
+> For each ticket Expected section: Boss calls first: Inventory... [the order
+> workflow, its in-stock and out-of-stock branches, and the note that Facilities
+> is skipped because nothing in an order involves leases or rent]
+>
+> MCP tools I expect to run, and why: Stock lookup (reads inventory)... Rent and
+> unpaid-bill tickets would have a different shape. A rent ticket would start
+> with Facilities and then go to Accounting, and a bill ticket would start with
+> Accounting. Checking what each ticket says before you copy this pattern, we
+> don't want to send every specialist on every ticket.
+
+**What Claude did.** Rebuilt each Expected section as four blocks — *Boss calls
+first*, *Workflow*, *MCP tools expected to run, and why*, and *Skipped, and
+why* — and took the closing warning literally rather than copying the order
+pattern onto all three tabs. Tickets 101 and 103 open with Inventory because
+stock decides them; 102 opens with Facilities, and its tab says plainly that a
+rent ticket has no SKU, no size and no supplier, so Inventory would cost a model
+call to be told there is no product on the ticket.
+
+The tool lists name the real tools rather than generic lookups, and note where
+they differ from the four the prompt described: `get_ticket` already returns the
+stock, invoice and cash rows together, so one call covers three of them. Two
+skips are argued rather than listed — Accounting is only on ticket 101 because
+the tee is out of stock and the vendor is blocked, with the in-stock
+counterfactual written out; and `propose_payment` is deliberately absent from
+103, because 264.00 is arithmetic off the pricing table rather than a bill, and
+proposing it would ask a human to approve a purchase the balance cannot cover.

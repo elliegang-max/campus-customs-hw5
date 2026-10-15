@@ -723,9 +723,28 @@ zero tee stock, and the 12-unit hoodie shortfall.
 | Section | Holds |
 |---|---|
 | **What the database says** | the ticket's own row plus the rows it links to |
-| **Expected** | what the team should do, step by step, with the figures each step should produce |
+| **Boss calls first** | which specialist opens the ticket, and why that answer decides the rest |
+| **Workflow** | the delegation path step by step, with the figure each step should produce |
+| **MCP tools expected to run, and why** | the tools by name, the tables they touch, and what each is for *on this ticket* |
+| **Skipped, and why** | the specialists and tools that should **not** run |
 | **It should not** | the specific wrong moves this ticket invites — promising 2026-09-05 on 101, quoting a discount on 103 |
 | **Actual** | empty, for filling in after a run |
+
+**The three tickets open differently, and that is the point.** 101 and 103 are
+orders, so **Inventory** goes first: whether the SKU exists in that size decides
+who else is called and whether money is involved at all. 102 is rent, so
+**Facilities** goes first — there is no SKU to look up, and the lease, not the
+notice that raised the ticket, is the record. Sending every specialist at every
+ticket would cost a model call each time to be told the ticket has no product on
+it.
+
+The *Skipped* sections are written as carefully as the workflows. On 101,
+Accounting runs only because the tee is out of stock and the vendor is blocked —
+had it been in stock, the path would go Inventory → Customer Service with no
+money involved at all, and that counterfactual is on the tab. On 103,
+`propose_payment` is skipped deliberately: the 264.00 restock is arithmetic off
+the pricing table, not a bill, and proposing it would put a purchase in front of
+a human that the balance cannot cover anyway.
 
 The "It should not" lists are the useful half. Each one names a mistake the
 data actively tempts an agent into: `get_vendor_status` *returns*

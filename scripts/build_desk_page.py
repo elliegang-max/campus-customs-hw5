@@ -87,6 +87,18 @@ def steps(items: list[str]) -> str:
     return "<ol class='steps'>" + "".join(f"<li>{i}</li>" for i in items) + "</ol>"
 
 
+def tools_table(rows: list[tuple[str, str, str]]) -> str:
+    """Tool, what it touches, and why it runs on this ticket."""
+    body = "".join(
+        f"<tr><td><code>{t}</code></td><td class='tbl'>{tables}</td><td>{why}</td></tr>"
+        for t, tables, why in rows
+    )
+    return (
+        "<table class='tools'><thead><tr><th>Tool</th><th>Tables</th>"
+        f"<th>Why it runs here</th></tr></thead><tbody>{body}</tbody></table>"
+    )
+
+
 def nots(items: list[str]) -> str:
     return (
         "<ul class='nots'>" + "".join(f"<li>{i}</li>" for i in items) + "</ul>"
@@ -114,15 +126,45 @@ TAB_101 = {
         ("Vendor", f"{e(APPAREL_VENDOR['name'])} — {e(APPAREL_VENDOR['specialty'])}, {APPAREL_VENDOR['lead_days']}-day lead"),
         ("Cash", money(CASH["balance"])),
     ]),
-    "expected": steps([
-        f"<strong>Inventory</strong> finds size {e(t101['size'])} at <strong>{on_hand_101}</strong> — nothing to sell. The shortfall is {t101['qty'] - on_hand_101}.",
-        f"The ticket already points at invoice <strong>#{INVOICE['id']}</strong>, described as “{e(INVOICE['description'])}” — the restock was ordered and billed.",
-        f"<strong>{e(APPAREL_VENDOR['name'])} will not ship</strong> while that invoice is open, so <code>get_vendor_status</code> should come back <code>can_ship: false</code>.",
-        f"<strong>Accounting</strong> proposes paying {money(INVOICE['amount'])} — {money(CASH['balance'])} → <strong>{money(AFTER_INVOICE)}</strong> — and the proposal should name <strong>both tickets 101 and 103</strong> as unblocked, since the same vendor supplies both.",
-        "<strong>Nothing is paid.</strong> The proposal sits at <code>proposed</code> until a human approves it.",
-        f"<strong>Customer Service</strong> drafts to {e(t101['requester'])}: out of stock in {e(t101['size'])}, restock delayed, <em>no date</em>. Stored with <code>sent: false</code>.",
-        "The ticket stays <strong>open</strong>: it needs an approval, then a payment, then a vendor shipment.",
+    "first_call": f"""<strong>Inventory.</strong> The order can only be filled if
+      {e(t101['sku'])} exists in size {e(t101['size'])}, so that one answer decides
+      everything after it — who else gets called, whether money is involved, and what
+      the customer can be told.""",
+    "workflow": steps([
+        f"<strong>Boss → Inventory:</strong> is {e(t101['sku'])} in stock in size {e(t101['size'])}? "
+        f"The answer is <strong>{on_hand_101}</strong> — out of stock, short by {t101['qty'] - on_hand_101}. "
+        "The out-of-stock path below is the one that runs.",
+        f"<strong>Inventory</strong> finds who can restock: {e(APPAREL_VENDOR['name'])} "
+        f"({e(APPAREL_VENDOR['specialty'])}), lead time <strong>{APPAREL_VENDOR['lead_days']} days</strong>. "
+        "Both come from the vendors table, not from a guess.",
+        f"<strong>Boss → Accounting:</strong> does that vendor have an open unpaid invoice? "
+        f"Yes — <strong>#{INVOICE['id']}, {money(INVOICE['amount'])}, {INVOICE_OVERDUE} days overdue</strong>. "
+        "They will not ship until it is paid.",
+        f"<strong>Accounting</strong> checks cash ({money(CASH['balance'])}), confirms {money(INVOICE['amount'])} "
+        f"fits, and <strong>prepares the payment for human approval</strong> — {money(CASH['balance'])} → "
+        f"{money(AFTER_INVOICE)}. It pays nothing itself, and <code>pay</code> refuses while the approval "
+        "is missing or the cash is short.",
+        f"<strong>Boss → Customer Service:</strong> draft to {e(t101['requester'])} with a realistic timeline — "
+        f"out of stock in {e(t101['size'])}, restock held up, <em>no date</em> until the invoice clears. "
+        "Saved to the board, never sent.",
+        "<strong>Boss makes the final call:</strong> ticket stays <strong>open</strong>, waiting on a human "
+        "approval, then a payment, then a shipment.",
     ]),
+    "tools": tools_table([
+        ("list_tickets", "desk, tickets", "the board, and the shop's date every other judgement uses"),
+        ("get_ticket(101)", "tickets, inventory, pricing, invoices, vendors, cash_accounts",
+         f"stock for {e(t101['sku'])}/{e(t101['size'])}, the linked invoice, and the balance — this one call covers the stock, invoice and cash lookups"),
+        ("get_vendor_status(1)", "desk, vendors, invoices",
+         f"who can restock, the {APPAREL_VENDOR['lead_days']}-day lead time, and whether an unpaid invoice blocks shipping"),
+        ("list_approvals", "desk, approvals", "whether this payment was already approved on an earlier pass"),
+        ("propose_payment", "writes approvals", f"puts {money(INVOICE['amount'])} in front of a human — pays nothing"),
+        ("record_draft_reply", "writes drafts", "saves the reply to the board instead of emailing anyone"),
+    ]),
+    "skipped": f"""<strong>Facilities</strong> — nothing in an order touches a lease or
+      rent. <strong><code>pay</code></strong> — there is no approval yet, and it would
+      refuse. Accounting <em>would</em> have been skipped too had the tee been in stock:
+      on the in-stock path no money moves, and the ticket goes straight from Inventory
+      to Customer Service.""",
     "nots": nots([
         f"Promise <strong>{e(SHIP_IF_CLEARED)}</strong> — that date only applies once the invoice is paid, and the tools return it with that condition attached.",
         "Tell the customer the shop has an unpaid or overdue invoice. The delay is the shop's business.",
@@ -149,14 +191,38 @@ TAB_102 = {
         ("Next due", f"{e(LEASE['next_due'])} — <strong>in {RENT_DUE_IN} days</strong>, not overdue"),
         ("Cash", money(CASH["balance"])),
     ]),
-    "expected": steps([
-        f"<strong>Facilities</strong> reads lease #{LEASE['id']} and reports {money(LEASE['monthly_rent'])} due {e(LEASE['next_due'])} — <strong>{RENT_DUE_IN} days</strong> from the shop's date of {e(TODAY)}. Not overdue.",
-        "The figures come from the <em>lease row</em>, not from the email that raised the ticket. A notice can be wrong; the lease is the record.",
-        f"<strong>Accounting</strong> confirms it is affordable and proposes it: {money(CASH['balance'])} → {money(round(CASH['balance'] - LEASE['monthly_rent'], 2))} on its own, or <strong>{money(AFTER_RENT)}</strong> if the invoice is paid first.",
-        "<strong>Nothing is paid.</strong> Rent waits on the same human approval as anything else.",
-        f"<strong>Customer Service</strong> drafts to {e(LEASE['landlord'])} acknowledging the due date, with <code>sent: false</code>.",
-        "The ticket stays <strong>open</strong> until the rent is approved and paid.",
+    "first_call": """<strong>Facilities.</strong> A rent ticket is a different shape
+      from an order: there is no SKU and no size, so there is nothing for Inventory to
+      answer. What decides this ticket is the lease — and the lease is the record, not
+      the email that raised it.""",
+    "workflow": steps([
+        f"<strong>Boss → Facilities:</strong> what does lease #{LEASE['id']} actually say? "
+        f"{e(LEASE['space_name'])}, {e(LEASE['landlord'])}, <strong>{money(LEASE['monthly_rent'])}</strong>, "
+        f"next due <strong>{e(LEASE['next_due'])}</strong> — {RENT_DUE_IN} days from the shop's date. Not overdue.",
+        "<strong>Facilities reports the lease row, not the notice.</strong> A notice can be wrong about "
+        "the amount or the date; the lease cannot.",
+        f"<strong>Boss → Accounting:</strong> can it be paid? Cash is {money(CASH['balance'])}, so yes — "
+        f"on its own it leaves {money(round(CASH['balance'] - LEASE['monthly_rent'], 2))}, or "
+        f"<strong>{money(AFTER_RENT)}</strong> if the overdue invoice is paid first.",
+        "<strong>Accounting prepares it for human approval</strong> and stops there. Rent waits on a "
+        "person like every other payment.",
+        f"<strong>Boss → Customer Service:</strong> draft to {e(LEASE['landlord'])} acknowledging the due "
+        "date. Saved to the board, never sent.",
+        "<strong>Boss makes the final call:</strong> ticket stays <strong>open</strong> until the rent is "
+        "approved and paid.",
     ]),
+    "tools": tools_table([
+        ("list_tickets", "desk, tickets", "the board, and the shop's date the due-date maths uses"),
+        ("get_ticket(102)", "tickets, leases, cash_accounts",
+         f"the lease row with <code>days_until_due</code> already measured, plus the balance"),
+        ("list_approvals", "desk, approvals", "whether rent was already proposed or approved"),
+        ("propose_payment", "writes approvals", f"puts {money(LEASE['monthly_rent'])} in front of a human — pays nothing"),
+        ("record_draft_reply", "writes drafts", "saves the acknowledgement to the board"),
+    ]),
+    "skipped": """<strong>Inventory</strong>, and every vendor tool with it — a rent
+      ticket has no SKU, no size and no supplier, so there is nothing to look up.
+      Sending Inventory here would burn a model call to be told the ticket has no
+      product on it. <strong><code>pay</code></strong> — no approval yet.""",
     "nots": nots([
         "Tell the landlord what is in the shop's account.",
         "Treat the rent as overdue — it is not, and the shop's date is what decides that.",
@@ -192,15 +258,48 @@ TAB_103 = {
         ("Restock cost", f"{short_103} × {money(p103['unit_cost'])} = <strong>{money(restock_cost)}</strong>"),
         ("Vendor", f"{e(APPAREL_VENDOR['name'])} — blocked by invoice #{INVOICE['id']}"),
     ]),
-    "expected": steps([
-        f"<strong>Inventory</strong> finds {on_hand_103} of {t103['qty']} in size {e(t103['size'])} — <strong>short by {short_103}</strong>. The {sum(r['qty'] for r in other_sizes)} in other sizes do not count.",
-        f"The missing {short_103} are apparel, so the supplier is {e(APPAREL_VENDOR['name'])} — <strong>the same vendor blocked by invoice #{INVOICE['id']}</strong>. This ticket and 101 queue behind one payment.",
-        f"<strong>Accounting must be asked</strong>, even though the ticket never mentions money: a restock is a purchase. {short_103} × {money(p103['unit_cost'])} = <strong>{money(restock_cost)}</strong>.",
-        f"That restock <strong>does not fit</strong>. After the invoice and the rent the account holds {money(AFTER_RENT)}, so {money(restock_cost)} is {money(round(restock_cost - AFTER_RENT, 2))} beyond it.",
-        f"The discount question is bounded by {money(p103['unit_cost'])} cost against {money(p103['list_price'])} list — and <strong>a human sets the number</strong>. No agent should quote one.",
-        f"<strong>Customer Service</strong> drafts to {e(t103['requester'])}: {on_hand_103} available now, {short_103} delayed with no date, no discount confirmed.",
-        "The ticket stays <strong>open</strong>: it needs a human decision on price, and the shortfall needs money the shop does not have this week.",
+    "first_call": f"""<strong>Inventory.</strong> Like ticket 101 this is an order,
+      so stock decides it: {t103['qty']} of {e(t103['sku'])} in size {e(t103['size'])} either
+      exist or they do not. The discount question cannot be answered before anyone knows
+      how many can actually be supplied.""",
+    "workflow": steps([
+        f"<strong>Boss → Inventory:</strong> {t103['qty']} × {e(t103['sku'])} in {e(t103['size'])}? "
+        f"<strong>{on_hand_103}</strong> on hand — <strong>short by {short_103}</strong>. The "
+        f"{sum(r['qty'] for r in other_sizes)} in other sizes are not a substitute, so this is the "
+        "out-of-stock path.",
+        f"<strong>Inventory</strong> finds the supplier for the missing {short_103}: "
+        f"{e(APPAREL_VENDOR['name'])} again, {APPAREL_VENDOR['lead_days']}-day lead — "
+        f"<strong>the same vendor blocked by invoice #{INVOICE['id']}</strong>. This ticket queues "
+        "behind the same payment as 101.",
+        f"<strong>Boss → Accounting</strong>, even though the ticket never mentions money: a restock is "
+        f"a purchase. {short_103} × {money(p103['unit_cost'])} = <strong>{money(restock_cost)}</strong>, "
+        f"and after the invoice and the rent the account holds {money(AFTER_RENT)} — so the restock is "
+        f"<strong>{money(round(restock_cost - AFTER_RENT, 2))} beyond reach</strong> this week.",
+        f"<strong>Accounting proposes nothing for this ticket.</strong> There is no vendor quote and no "
+        f"invoice to pay; {money(restock_cost)} is arithmetic off the pricing table, not a bill. The "
+        f"#{INVOICE['id']} proposal from ticket 101 already covers the shipping block.",
+        f"<strong>The discount is a human decision.</strong> The team may lay out "
+        f"{money(p103['unit_cost'])} cost against {money(p103['list_price'])} list and stop there. "
+        "No agent quotes a number.",
+        f"<strong>Boss → Customer Service:</strong> draft to {e(t103['requester'])} — {on_hand_103} "
+        f"available, {short_103} delayed with no date, no discount confirmed. Saved, never sent.",
+        "<strong>Boss makes the final call:</strong> ticket stays <strong>open</strong> on two counts — "
+        "a price decision and money the shop does not have this week.",
     ]),
+    "tools": tools_table([
+        ("list_tickets", "desk, tickets", "the board, and the shop's date"),
+        ("get_ticket(103)", "tickets, inventory, pricing, cash_accounts",
+         f"every size of {e(t103['sku'])}, the cost and list price, and the balance"),
+        ("get_vendor_status(1)", "desk, vendors, invoices",
+         "the supplier for the shortfall, the lead time, and the invoice blocking them"),
+        ("list_approvals", "desk, approvals", "whether the invoice blocking this vendor is already approved"),
+        ("record_draft_reply", "writes drafts", "saves the reply to the board instead of emailing anyone"),
+    ]),
+    "skipped": f"""<strong>Facilities</strong> — no lease, no rent.
+      <strong><code>propose_payment</code></strong> — nothing here is a payable: the
+      {money(restock_cost)} is arithmetic, not a bill, and proposing it would ask a human
+      to approve a purchase that does not fit the balance anyway.
+      <strong><code>pay</code></strong> — nothing to pay.""",
     "nots": nots([
         "Offer a discount, a percentage, or a per-unit price. That is the human decision this ticket exists to ask for.",
         f"Quote a price below {money(p103['unit_cost'])} — that is selling at a loss.",
@@ -241,7 +340,19 @@ def ticket_panel(tab: dict) -> str:
 
   <h3 class="expected">Expected</h3>
   <p class="lede">What the agent team should do with this ticket, from the data above.</p>
-  {tab['expected']}
+
+  <h4 class="plain">Boss calls first</h4>
+  <p class="first-call">{tab['first_call']}</p>
+
+  <h4 class="plain">Workflow</h4>
+  {tab['workflow']}
+
+  <h4 class="plain">MCP tools expected to run, and why</h4>
+  {tab['tools']}
+
+  <h4 class="plain">Skipped, and why</h4>
+  <p class="skipped">{tab['skipped']}</p>
+
   <h4>It should not</h4>
   {tab['nots']}
 
@@ -331,6 +442,22 @@ HTML = f"""<!doctype html>
   h3.expected::before {{ content: "✓ "; color: var(--accent); }}
   h3.actual::before {{ content: "✎ "; color: var(--warn); }}
   h4 {{ font-size: .92rem; margin: 1.2rem 0 .4rem; color: var(--warn); }}
+  h4.plain {{
+    color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+    font-size: .75rem; margin-top: 1.5rem;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }}
+  .first-call, .skipped {{ margin: 0 0 .4rem; }}
+  .skipped {{ color: var(--muted); font-size: .92rem; }}
+  table.tools {{ width: 100%; border-collapse: collapse; font-size: .88rem; }}
+  table.tools th {{
+    text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); padding: 0 .7rem .35rem 0; border-bottom: 1px solid var(--line);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }}
+  table.tools td {{ padding: .45rem .7rem .45rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }}
+  table.tools td.tbl {{ color: var(--muted); font-size: .82rem; white-space: normal; }}
+  table.tools tr:last-child td {{ border-bottom: 0; }}
   .lede {{ color: var(--muted); font-size: .9rem; margin: 0 0 .8rem; }}
   table.facts {{ width: 100%; border-collapse: collapse; font-size: .94rem; }}
   table.facts th {{

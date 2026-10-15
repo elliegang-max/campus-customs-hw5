@@ -52,6 +52,22 @@
   h3.expected::before { content: "✓ "; color: var(--accent); }
   h3.actual::before { content: "✎ "; color: var(--warn); }
   h4 { font-size: .92rem; margin: 1.2rem 0 .4rem; color: var(--warn); }
+  h4.plain {
+    color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+    font-size: .75rem; margin-top: 1.5rem;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+  .first-call, .skipped { margin: 0 0 .4rem; }
+  .skipped { color: var(--muted); font-size: .92rem; }
+  table.tools { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  table.tools th {
+    text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); padding: 0 .7rem .35rem 0; border-bottom: 1px solid var(--line);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+  table.tools td { padding: .45rem .7rem .45rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.tools td.tbl { color: var(--muted); font-size: .82rem; white-space: normal; }
+  table.tools tr:last-child td { border-bottom: 0; }
   .lede { color: var(--muted); font-size: .9rem; margin: 0 0 .8rem; }
   table.facts { width: 100%; border-collapse: collapse; font-size: .94rem; }
   table.facts th {
@@ -107,7 +123,26 @@
 
   <h3 class="expected">Expected</h3>
   <p class="lede">What the agent team should do with this ticket, from the data above.</p>
-  <ol class='steps'><li><strong>Inventory</strong> finds size S at <strong>0</strong> — nothing to sell. The shortfall is 1.</li><li>The ticket already points at invoice <strong>#501</strong>, described as “Rush reprint CC-TEE-WHITE S” — the restock was ordered and billed.</li><li><strong>Bulldog Print Co will not ship</strong> while that invoice is open, so <code>get_vendor_status</code> should come back <code>can_ship: false</code>.</li><li><strong>Accounting</strong> proposes paying $840.00 — $3,400.00 → <strong>$2,560.00</strong> — and the proposal should name <strong>both tickets 101 and 103</strong> as unblocked, since the same vendor supplies both.</li><li><strong>Nothing is paid.</strong> The proposal sits at <code>proposed</code> until a human approves it.</li><li><strong>Customer Service</strong> drafts to Tauhid Zaman: out of stock in S, restock delayed, <em>no date</em>. Stored with <code>sent: false</code>.</li><li>The ticket stays <strong>open</strong>: it needs an approval, then a payment, then a vendor shipment.</li></ol>
+
+  <h4 class="plain">Boss calls first</h4>
+  <p class="first-call"><strong>Inventory.</strong> The order can only be filled if
+      CC-TEE-WHITE exists in size S, so that one answer decides
+      everything after it — who else gets called, whether money is involved, and what
+      the customer can be told.</p>
+
+  <h4 class="plain">Workflow</h4>
+  <ol class='steps'><li><strong>Boss → Inventory:</strong> is CC-TEE-WHITE in stock in size S? The answer is <strong>0</strong> — out of stock, short by 1. The out-of-stock path below is the one that runs.</li><li><strong>Inventory</strong> finds who can restock: Bulldog Print Co (apparel reprint), lead time <strong>5 days</strong>. Both come from the vendors table, not from a guess.</li><li><strong>Boss → Accounting:</strong> does that vendor have an open unpaid invoice? Yes — <strong>#501, $840.00, 3 days overdue</strong>. They will not ship until it is paid.</li><li><strong>Accounting</strong> checks cash ($3,400.00), confirms $840.00 fits, and <strong>prepares the payment for human approval</strong> — $3,400.00 → $2,560.00. It pays nothing itself, and <code>pay</code> refuses while the approval is missing or the cash is short.</li><li><strong>Boss → Customer Service:</strong> draft to Tauhid Zaman with a realistic timeline — out of stock in S, restock held up, <em>no date</em> until the invoice clears. Saved to the board, never sent.</li><li><strong>Boss makes the final call:</strong> ticket stays <strong>open</strong>, waiting on a human approval, then a payment, then a shipment.</li></ol>
+
+  <h4 class="plain">MCP tools expected to run, and why</h4>
+  <table class='tools'><thead><tr><th>Tool</th><th>Tables</th><th>Why it runs here</th></tr></thead><tbody><tr><td><code>list_tickets</code></td><td class='tbl'>desk, tickets</td><td>the board, and the shop's date every other judgement uses</td></tr><tr><td><code>get_ticket(101)</code></td><td class='tbl'>tickets, inventory, pricing, invoices, vendors, cash_accounts</td><td>stock for CC-TEE-WHITE/S, the linked invoice, and the balance — this one call covers the stock, invoice and cash lookups</td></tr><tr><td><code>get_vendor_status(1)</code></td><td class='tbl'>desk, vendors, invoices</td><td>who can restock, the 5-day lead time, and whether an unpaid invoice blocks shipping</td></tr><tr><td><code>list_approvals</code></td><td class='tbl'>desk, approvals</td><td>whether this payment was already approved on an earlier pass</td></tr><tr><td><code>propose_payment</code></td><td class='tbl'>writes approvals</td><td>puts $840.00 in front of a human — pays nothing</td></tr><tr><td><code>record_draft_reply</code></td><td class='tbl'>writes drafts</td><td>saves the reply to the board instead of emailing anyone</td></tr></tbody></table>
+
+  <h4 class="plain">Skipped, and why</h4>
+  <p class="skipped"><strong>Facilities</strong> — nothing in an order touches a lease or
+      rent. <strong><code>pay</code></strong> — there is no approval yet, and it would
+      refuse. Accounting <em>would</em> have been skipped too had the tee been in stock:
+      on the in-stock path no money moves, and the ticket goes straight from Inventory
+      to Customer Service.</p>
+
   <h4>It should not</h4>
   <ul class='nots'><li>Promise <strong>2026-09-05</strong> — that date only applies once the invoice is paid, and the tools return it with that condition attached.</li><li>Tell the customer the shop has an unpaid or overdue invoice. The delay is the shop's business.</li><li>Offer a different size as if it were the same thing.</li><li>Pay anything, or claim anything was paid.</li></ul>
 
@@ -129,7 +164,25 @@
 
   <h3 class="expected">Expected</h3>
   <p class="lede">What the agent team should do with this ticket, from the data above.</p>
-  <ol class='steps'><li><strong>Facilities</strong> reads lease #1 and reports $2,400.00 due 2026-09-02 — <strong>2 days</strong> from the shop's date of 2026-08-31. Not overdue.</li><li>The figures come from the <em>lease row</em>, not from the email that raised the ticket. A notice can be wrong; the lease is the record.</li><li><strong>Accounting</strong> confirms it is affordable and proposes it: $3,400.00 → $1,000.00 on its own, or <strong>$160.00</strong> if the invoice is paid first.</li><li><strong>Nothing is paid.</strong> Rent waits on the same human approval as anything else.</li><li><strong>Customer Service</strong> drafts to Elm City Properties acknowledging the due date, with <code>sent: false</code>.</li><li>The ticket stays <strong>open</strong> until the rent is approved and paid.</li></ol>
+
+  <h4 class="plain">Boss calls first</h4>
+  <p class="first-call"><strong>Facilities.</strong> A rent ticket is a different shape
+      from an order: there is no SKU and no size, so there is nothing for Inventory to
+      answer. What decides this ticket is the lease — and the lease is the record, not
+      the email that raised it.</p>
+
+  <h4 class="plain">Workflow</h4>
+  <ol class='steps'><li><strong>Boss → Facilities:</strong> what does lease #1 actually say? Chapel Street shop, Elm City Properties, <strong>$2,400.00</strong>, next due <strong>2026-09-02</strong> — 2 days from the shop's date. Not overdue.</li><li><strong>Facilities reports the lease row, not the notice.</strong> A notice can be wrong about the amount or the date; the lease cannot.</li><li><strong>Boss → Accounting:</strong> can it be paid? Cash is $3,400.00, so yes — on its own it leaves $1,000.00, or <strong>$160.00</strong> if the overdue invoice is paid first.</li><li><strong>Accounting prepares it for human approval</strong> and stops there. Rent waits on a person like every other payment.</li><li><strong>Boss → Customer Service:</strong> draft to Elm City Properties acknowledging the due date. Saved to the board, never sent.</li><li><strong>Boss makes the final call:</strong> ticket stays <strong>open</strong> until the rent is approved and paid.</li></ol>
+
+  <h4 class="plain">MCP tools expected to run, and why</h4>
+  <table class='tools'><thead><tr><th>Tool</th><th>Tables</th><th>Why it runs here</th></tr></thead><tbody><tr><td><code>list_tickets</code></td><td class='tbl'>desk, tickets</td><td>the board, and the shop's date the due-date maths uses</td></tr><tr><td><code>get_ticket(102)</code></td><td class='tbl'>tickets, leases, cash_accounts</td><td>the lease row with <code>days_until_due</code> already measured, plus the balance</td></tr><tr><td><code>list_approvals</code></td><td class='tbl'>desk, approvals</td><td>whether rent was already proposed or approved</td></tr><tr><td><code>propose_payment</code></td><td class='tbl'>writes approvals</td><td>puts $2,400.00 in front of a human — pays nothing</td></tr><tr><td><code>record_draft_reply</code></td><td class='tbl'>writes drafts</td><td>saves the acknowledgement to the board</td></tr></tbody></table>
+
+  <h4 class="plain">Skipped, and why</h4>
+  <p class="skipped"><strong>Inventory</strong>, and every vendor tool with it — a rent
+      ticket has no SKU, no size and no supplier, so there is nothing to look up.
+      Sending Inventory here would burn a model call to be told the ticket has no
+      product on it. <strong><code>pay</code></strong> — no approval yet.</p>
+
   <h4>It should not</h4>
   <ul class='nots'><li>Tell the landlord what is in the shop's account.</li><li>Treat the rent as overdue — it is not, and the shop's date is what decides that.</li><li>Pay it before the overdue invoice without saying why: both fit ($840.00 + $2,400.00 = $3,240.00 against $3,400.00), but the order should be reasoned about out loud.</li></ul>
 
@@ -151,7 +204,26 @@
 
   <h3 class="expected">Expected</h3>
   <p class="lede">What the agent team should do with this ticket, from the data above.</p>
-  <ol class='steps'><li><strong>Inventory</strong> finds 8 of 20 in size M — <strong>short by 12</strong>. The 24 in other sizes do not count.</li><li>The missing 12 are apparel, so the supplier is Bulldog Print Co — <strong>the same vendor blocked by invoice #501</strong>. This ticket and 101 queue behind one payment.</li><li><strong>Accounting must be asked</strong>, even though the ticket never mentions money: a restock is a purchase. 12 × $22.00 = <strong>$264.00</strong>.</li><li>That restock <strong>does not fit</strong>. After the invoice and the rent the account holds $160.00, so $264.00 is $104.00 beyond it.</li><li>The discount question is bounded by $22.00 cost against $58.00 list — and <strong>a human sets the number</strong>. No agent should quote one.</li><li><strong>Customer Service</strong> drafts to Yale AI Club: 8 available now, 12 delayed with no date, no discount confirmed.</li><li>The ticket stays <strong>open</strong>: it needs a human decision on price, and the shortfall needs money the shop does not have this week.</li></ol>
+
+  <h4 class="plain">Boss calls first</h4>
+  <p class="first-call"><strong>Inventory.</strong> Like ticket 101 this is an order,
+      so stock decides it: 20 of CC-HOOD-NAVY in size M either
+      exist or they do not. The discount question cannot be answered before anyone knows
+      how many can actually be supplied.</p>
+
+  <h4 class="plain">Workflow</h4>
+  <ol class='steps'><li><strong>Boss → Inventory:</strong> 20 × CC-HOOD-NAVY in M? <strong>8</strong> on hand — <strong>short by 12</strong>. The 24 in other sizes are not a substitute, so this is the out-of-stock path.</li><li><strong>Inventory</strong> finds the supplier for the missing 12: Bulldog Print Co again, 5-day lead — <strong>the same vendor blocked by invoice #501</strong>. This ticket queues behind the same payment as 101.</li><li><strong>Boss → Accounting</strong>, even though the ticket never mentions money: a restock is a purchase. 12 × $22.00 = <strong>$264.00</strong>, and after the invoice and the rent the account holds $160.00 — so the restock is <strong>$104.00 beyond reach</strong> this week.</li><li><strong>Accounting proposes nothing for this ticket.</strong> There is no vendor quote and no invoice to pay; $264.00 is arithmetic off the pricing table, not a bill. The #501 proposal from ticket 101 already covers the shipping block.</li><li><strong>The discount is a human decision.</strong> The team may lay out $22.00 cost against $58.00 list and stop there. No agent quotes a number.</li><li><strong>Boss → Customer Service:</strong> draft to Yale AI Club — 8 available, 12 delayed with no date, no discount confirmed. Saved, never sent.</li><li><strong>Boss makes the final call:</strong> ticket stays <strong>open</strong> on two counts — a price decision and money the shop does not have this week.</li></ol>
+
+  <h4 class="plain">MCP tools expected to run, and why</h4>
+  <table class='tools'><thead><tr><th>Tool</th><th>Tables</th><th>Why it runs here</th></tr></thead><tbody><tr><td><code>list_tickets</code></td><td class='tbl'>desk, tickets</td><td>the board, and the shop's date</td></tr><tr><td><code>get_ticket(103)</code></td><td class='tbl'>tickets, inventory, pricing, cash_accounts</td><td>every size of CC-HOOD-NAVY, the cost and list price, and the balance</td></tr><tr><td><code>get_vendor_status(1)</code></td><td class='tbl'>desk, vendors, invoices</td><td>the supplier for the shortfall, the lead time, and the invoice blocking them</td></tr><tr><td><code>list_approvals</code></td><td class='tbl'>desk, approvals</td><td>whether the invoice blocking this vendor is already approved</td></tr><tr><td><code>record_draft_reply</code></td><td class='tbl'>writes drafts</td><td>saves the reply to the board instead of emailing anyone</td></tr></tbody></table>
+
+  <h4 class="plain">Skipped, and why</h4>
+  <p class="skipped"><strong>Facilities</strong> — no lease, no rent.
+      <strong><code>propose_payment</code></strong> — nothing here is a payable: the
+      $264.00 is arithmetic, not a bill, and proposing it would ask a human
+      to approve a purchase that does not fit the balance anyway.
+      <strong><code>pay</code></strong> — nothing to pay.</p>
+
   <h4>It should not</h4>
   <ul class='nots'><li>Offer a discount, a percentage, or a per-unit price. That is the human decision this ticket exists to ask for.</li><li>Quote a price below $22.00 — that is selling at a loss.</li><li>Promise the full 20, or a delivery date for the missing 12.</li><li>Treat the other sizes as filling the order.</li></ul>
 
