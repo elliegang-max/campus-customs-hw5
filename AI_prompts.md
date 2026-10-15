@@ -274,3 +274,20 @@ told the *landlord* the shop's checking balance. Every number in it was true,
 which is the point: "never invent" does not imply "never disclose". The Customer
 Service prompt now rules the books internal, and a re-run produced a clean
 draft.
+
+**Follow-up prompt** — 2026-10-14 _(the team had only been proven on one
+ticket)_
+
+> Reset the database and run the full board across all three tickets.
+
+**What Claude did.** Reset the working copy, ran the whole board in one pass (88
+seconds), and saved `output/board_review.json`. The team reached the same
+spending plan as the hand analysis in `data_model.md` — invoice #501 first
+because it is both overdue and the shipping blocker, then rent, leaving 160.00 —
+from the tools alone, and left all three tickets `needs_human: true` with
+nothing written to the database. It then recorded three faults rather than
+declaring success: the approval request says paying #501 unblocks only ticket
+101 when it unblocks 103 as well; Accounting was never consulted on 103, so
+nobody noticed the 264.00 restock does not fit in the 160.00 that would remain;
+and the reply to the customer disclosed that the shop has an overdue invoice.
+All three are prompt gaps about what to volunteer, not code faults.

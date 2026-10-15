@@ -453,3 +453,60 @@ the same ticket produced a draft with no internal figures in it.
 
 Nothing was written to the database: the tools are read-only, and the payment
 exists only as a proposal.
+
+### 3.6 Full board run
+
+Database reset first, as the rules require. `python -m backend.run_board -o
+output/board_review.json` — one run, 88 seconds, all three tickets.
+
+| Ticket | Delegated to | What the team concluded |
+|---|---|---|
+| 101 | inventory → accounting → customer_service | S tee is 0, short by 1; Bulldog Print Co blocked by invoice #501, 3 days overdue; **no arrival date promised** |
+| 102 | facilities → accounting → customer_service | 2400.00 due 2026-09-02, two days out, not overdue |
+| 103 | inventory → customer_service | 8 of 20 in stock, short by 12; restock blocked by the same invoice; cost 22.00 against list 58.00, **discount left to a human** |
+
+The spending plan it produced on its own:
+
+> Pay invoice #501 (840.00) first — it is overdue *and* it is the verified
+> shipping blocker — leaving 2,560.00. Then rent (2,400.00), leaving **160.00**.
+> Both fit; neither is paid.
+
+That is the same order and the same arithmetic as the hand analysis in
+[`data_model.md`](data_model.md), reached from the tools alone. All three
+tickets came back `needs_human: true` and `resolved: false`, which is correct:
+nothing can be closed until a person approves a payment.
+
+**Nothing was written.** After the run: `payments` still empty, invoice #501
+still `open`, checking still 3400.00, all three tickets still `open`, and the
+file's SHA-256 unchanged. The two payments exist only as `ApprovalRequest`s with
+`approved: null`.
+
+**The drafts held up.** No cash balances, no unit costs, no margins, and no
+invented dates — ticket 101's draft says plainly that there is no restock date
+to give rather than inventing 2026-09-05, which the tools had offered it.
+
+### 3.7 Three faults in the run, worth keeping
+
+None of these are crashes; all three are the agents being less careful than the
+data allows, and all three are prompt problems rather than code problems.
+
+1. **`unblocks` undercounts.** The approval request for invoice #501 lists
+   `unblocks: [101]`. Paying it also unblocks **103** — same vendor, same
+   block — and the Boss said so in prose for ticket 103 while leaving it out of
+   the structured field. A human skimming the approval sees one ticket's worth
+   of benefit for an 840.00 payment instead of two.
+2. **Accounting was never asked about 103.** The Boss delegated it to Inventory
+   and Customer Service only, so nobody checked whether the restock could be
+   paid for. It cannot: 12 units at 22.00 is **264.00**, and the two approved
+   payments would leave **160.00**. The run never surfaces that the restock is
+   unaffordable this week — the one fact that decides what the Yale AI Club can
+   actually be promised.
+3. **The customer was told the shop has an overdue invoice.** Ticket 101's
+   draft explains the delay as "the vendor is unable to ship while an overdue
+   invoice remains open". True, and sourced — but it is the shop's debt, and the
+   prompt rule that keeps balances and margins internal did not name it.
+
+The pattern across all three: the rules say *never invent*, and the agents
+obeyed. They say much less about what to **volunteer** — which links to draw
+between tickets, which specialist to consult when money is implied rather than
+stated, and which true fact is nobody else's business.

@@ -1,0 +1,114 @@
+{
+  "shop_date": "2026-08-31",
+  "cash_available": 3400.0,
+  "outcomes": [
+    {
+      "ticket_id": 101,
+      "kind": "customer_order",
+      "requester": "Tauhid Zaman",
+      "delegated_to": [
+        "inventory",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "Size S tee stock is 0 (short by 1). Bulldog Print Co is blocked by open invoice #501, $840, 3 days overdue. Its lead time is 5 days; if ordered today, earliest ship date is 2026-09-05, but that is not assured while the invoice is open. A reply draft was prepared and not sent.",
+      "recommended_action": "Submit proposed payment of invoice #501 for human approval. Once the invoice is actually cleared, arrange the restock; do not promise an arrival date until established. Draft reply remains unsent.",
+      "needs_human": true,
+      "approval_requests": [
+        {
+          "kind": "invoice",
+          "ref_id": 501,
+          "payee": "Bulldog Print Co",
+          "amount": 840.0,
+          "account": "checking",
+          "reason": "Overdue invoice blocks the vendor from shipping and is the restock blocker for the requested tee.",
+          "cash_before": 3400.0,
+          "cash_after": 2560.0,
+          "unblocks": [
+            101
+          ],
+          "urgency": "overdue",
+          "approved": null
+        }
+      ],
+      "draft_reply": {
+        "ticket_id": 101,
+        "to": "Tauhid Zaman",
+        "subject": "Re: Bulldog tee",
+        "body": "Hi Tauhid,\n\nThe white Bulldog tee in size S is out of stock, so we can\u2019t fill your request right now. The restock is delayed because the vendor is unable to ship while an overdue invoice remains open. We don\u2019t have a restock date to share yet.\n\nSorry for the wait,\nCampus Customs",
+        "promises_made": [],
+        "sent": false
+      },
+      "resolved": false
+    },
+    {
+      "ticket_id": 102,
+      "kind": "rent_notice",
+      "requester": "Elm City Properties",
+      "delegated_to": [
+        "facilities",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "Rent for the Chapel Street shop is $2,400, due 2026-09-02 (two days after shop date). A reply draft was prepared; rent has not been paid.",
+      "recommended_action": "Propose rent payment for human approval after the overdue invoice proposal. That sequence leaves $160 in checking after both proposed payments.",
+      "needs_human": true,
+      "approval_requests": [
+        {
+          "kind": "rent",
+          "ref_id": 1,
+          "payee": "Elm City Properties",
+          "amount": 2400.0,
+          "account": "checking",
+          "reason": "Rent is due in two days; proposed after the overdue invoice while keeping checking nonnegative.",
+          "cash_before": 2560.0,
+          "cash_after": 160.0,
+          "unblocks": [
+            102
+          ],
+          "urgency": "due_soon",
+          "approved": null
+        }
+      ],
+      "draft_reply": {
+        "ticket_id": 102,
+        "to": "Elm City Properties",
+        "subject": "Re: Rent due",
+        "body": "Hello Elm City Properties,\n\nWe\u2019ve noted that the $2,400 rent for the Chapel Street shop is due September 2, 2026. Payment has not been made; it is proposed for human approval.\n\nBest,\nCampus Customs",
+        "promises_made": [
+          "The $2,400 rent for the Chapel Street shop is due September 2, 2026."
+        ],
+        "sent": false
+      },
+      "resolved": false
+    },
+    {
+      "ticket_id": 103,
+      "kind": "price_override",
+      "requester": "Yale AI Club",
+      "delegated_to": [
+        "inventory",
+        "customer_service"
+      ],
+      "finding": "There are 8 size M navy hoodies on hand against a request for 20 (short by 12). Resupply is blocked by open invoice #501, and no shipment date is established. Unit cost is $22 and list price is $58; discount decision is for a human. A reply draft was prepared and not sent.",
+      "recommended_action": "A human must decide whether to offer a discount. Do not promise the full quantity or a delivery date; draft reply asks for no commitment and remains unsent. Paying invoice #501 clears the vendor's open-invoice shipping block but does not establish a hoodie shipment date.",
+      "needs_human": true,
+      "approval_requests": [],
+      "draft_reply": {
+        "ticket_id": 103,
+        "to": "Yale AI Club",
+        "subject": "Re: Bulk hoodie discount",
+        "body": "Hi Yale AI Club,\n\nWe have 8 size M navy hoodies in stock, so we can\u2019t currently fill your request for 20. The remaining 12 are delayed because restocking is blocked, and we don\u2019t have a shipment date to share. We can\u2019t confirm a bulk discount at this time; any pricing decision needs human approval.\n\nBest,\nCampus Customs",
+        "promises_made": [],
+        "sent": false
+      },
+      "resolved": false
+    }
+  ],
+  "spending_plan": [
+    "1. Propose invoice #501 ($840) for human approval first; if approved, checking goes from $3,400 to $2,560. This overdue invoice blocks Bulldog Print Co shipment for ticket 101.",
+    "2. Propose rent for lease #1 ($2,400) for human approval next; if both are approved in this order, checking goes from $2,560 to $160. Both proposals together total $3,240, within available cash.",
+    "Neither payment has been made. Do not treat ticket 103's hoodie restock as guaranteed by the invoice payment or promise a shipment date."
+  ],
+  "summary": "As of 2026-08-31, three open tickets remain unresolved. The overdue $840 vendor invoice is the first proposed payment because it is the verified shipment blocker and due before rent; the $2,400 rent is due 2026-09-02. If a human approves both in that order, $160 remains. Ticket 103 also needs a human discount decision. Draft replies for all tickets are recorded but unsent."
+}
