@@ -761,3 +761,85 @@ The page's structure was verified — five tabs, five panels, three Expected and
 three Actual sections, the Actual boxes empty, zero external references — but
 Chrome was not reachable from this session, so **nobody has looked at it
 rendered**. If something is off visually, that is why.
+
+---
+
+## 6. The API
+
+`backend/main.py` — FastAPI, for the dashboard to call.
+
+```bash
+./.venv/bin/python -m uvicorn backend.main:app --reload --port 8000
+```
+
+### 6.1 The routes
+
+| Route | Does | Through |
+|---|---|---|
+| `GET /api/tickets` | the three tickets, each open or resolved, with the shop's date | `list_tickets` |
+| `GET /api/tickets/{id}` | one ticket with every link resolved | `get_ticket` |
+| `POST /api/tickets/{id}/run` | runs the agent team on that ticket | the team |
+| `GET /api/runs/{run_id}` | where a run got to, and its review when it finishes | — |
+| `GET /api/events` | recent agent events: what each agent said, which tools ran | the audit trail |
+| `GET /api/approvals` | payments the agents proposed, and what became of them | `list_approvals` |
+| `POST /api/approvals/{id}` | **a human approves — the only route that changes cash** | `approve_payment` + `pay` |
+| `GET /api/cash` | the checking balance | `get_ticket` |
+| `POST /api/reset` | restore the working copy from the original | a file copy |
+
+**Everything goes through MCP**, the same tools the agents use — there is no
+second query layer in the API. The single exception is `/api/reset`, which
+replaces the database file: that is an operator action on the database, not a
+fact about the shop, and it is the one thing MCP has no tool for.
+
+### 6.2 Two decisions worth recording
+
+**A run returns immediately.** A board run takes a minute or two, far too long
+to hold a request open. `POST /api/tickets/{id}/run` opens an audit run id,
+starts the team in the background, and returns `202` with that id; the dashboard
+polls `/api/events?run_id=…&after_seq=…` to watch it happen and
+`/api/runs/{id}` for the result. A second run while one is in flight gets
+**409** — the team shares one database, and two boards at once would have them
+proposing against each other's half-finished state.
+
+**The human's click is where money moves.** The agents propose and stop.
+`POST /api/approvals/{id}` records the approval against the person who gave it
+and then calls `pay`. If `pay` refuses — no approval, already spent, or the
+balance cannot take it — that refusal comes back in `refused_because` with the
+cash unchanged, rather than being swallowed into a 500.
+
+### 6.3 Exercised against the running server
+
+Every route was called for real, not just imported:
+
+| Call | Result |
+|---|---|
+| `POST /api/reset` | board back to 3 open tickets, 3400.00 |
+| `GET /api/tickets` | 101, 102, 103 — all `open`, shop date 2026-08-31 |
+| `POST /api/tickets/101/run` | `202`, run id returned straight away |
+| `POST /api/tickets/102/run` *during* that run | **409**, as intended |
+| `GET /api/events?run_id=…` | the whole delegation tree streamed: boss → inventory, boss → accounting (which called `propose_payment`), boss → customer_service → **inventory**, then `record_draft_reply` |
+| `GET /api/approvals` | the one proposal the team made: invoice 501, 840.00, `proposed` |
+| `POST /api/approvals/1` | **paid** — 3400.00 → 2560.00, invoice marked paid |
+| `POST /api/approvals/2` (rent) | **paid** — 2560.00 → 160.00, lease rolled to 2026-10-02 |
+| `POST /api/approvals/3` (same rent again) | `paid: false`, `refused_because: "rent for lease 1 was already paid today"`, **cash still 160.00** |
+| `POST /api/approvals/1` twice | refused — "a decision cannot be changed" |
+
+### 6.4 Two bugs the API surfaced
+
+Neither could have shown up from the CLI, and both were in older code:
+
+- **`list_approvals` broke on a freshly reset board.** The `approvals` and
+  `drafts` tables are created on first *write*, but reading them opens the file
+  read-only — so straight after `POST /api/reset`, the very first thing a
+  dashboard would ask for returned *"no such table: approvals"*. `db.py` now
+  creates the extra tables whenever the file is opened and lacks them, keyed to
+  the file's mtime so a reset re-triggers it.
+- **Event sequence numbers restarted with every process.** Fine for a CLI that
+  runs once; wrong for a server, where the dashboard polls with `after_seq` and
+  a restarted counter makes old records look new. The counter now continues the
+  file's own numbering.
+
+A third was fixed before it could bite: the audit run id was generated once at
+import, so every run served by one process would have shared it. It is now
+opened per run — which is also what lets the run route hand the browser an id
+before the run has finished.

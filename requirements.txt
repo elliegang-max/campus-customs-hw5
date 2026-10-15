@@ -5,6 +5,10 @@
 # the standalone one first and falls back to the copy in the official SDK.
 fastmcp
 
+# The API the dashboard calls.
+fastapi
+uvicorn[standard]
+
 # The agent team. The [mcp] extra is what lets the agents use the shop's tools.
 pydantic-ai-slim[openai,mcp]
 openai
