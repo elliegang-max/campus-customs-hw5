@@ -36,3 +36,23 @@ The database has four tables — `catalogue` (102 products), `inventory` (612
 size rows), `users` (3), `chat_messages` (22) — and every `image_file_path` in
 the catalogue resolves to a file in `data/products/` (102 images). Added
 `data/` to `.gitignore` so the pack stays local, matching hw4.
+
+**Follow-up prompt** _(the data pack was in place, but nothing said which copy of
+the database the tools should write to)_
+
+> That file is the original shop database. Tables include desk, tickets,
+> inventory, pricing, vendors, leases, cash_accounts, payments, and invoices.
+> Your tools will update the database as tickets get resolved. Make a copy of the
+> database file called data/campus_customs_new.db and point your MCP server and
+> backend at that working copy. Keep campus_customs.db untouched so you can reset
+> when you want to restart resolving the tickets.
+
+**What Claude did.** Copied the database to `data/campus_customs_new.db`, made
+the original read-only so nothing can write to it by accident, added
+`scripts/reset_db.sh` to restore the working copy from the original, and wrote
+the convention into the README so the MCP server and backend (not yet built)
+point at the working copy. It also flagged a mismatch: the database unpacked
+from `data-2.zip` holds `catalogue`, `inventory`, `users`, and `chat_messages` —
+the hw4 storefront schema — and none of the `desk` / `tickets` / `vendors` /
+`leases` / `cash_accounts` / `payments` / `invoices` tables described above, so
+the hw5 data pack still has to be supplied.

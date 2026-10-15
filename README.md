@@ -13,8 +13,24 @@ hw5/
 ├── .gitignore
 ├── README.md
 ├── prompts/            # system / task prompts
+├── scripts/reset_db.sh # restore the working db from the original
 ├── data/               # data pack (not committed)
 └── output/             # write-ups and generated artefacts
+```
+
+## The database
+
+The data pack is **not** committed. Two files live in `data/`:
+
+| File | Role |
+| --- | --- |
+| `campus_customs.db` | the original shop database — **never written to** (kept read-only) |
+| `campus_customs_new.db` | the working copy — the MCP server and backend point here, and tools write to it as tickets get resolved |
+
+To start the tickets over from scratch:
+
+```bash
+./scripts/reset_db.sh
 ```
 
 ## Setup
