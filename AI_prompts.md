@@ -3,12 +3,17 @@
 A log of the prompts I typed into Claude while working on this assignment, in my
 own words, organised by problem.
 
-**Convention:** one section per problem. Each section records the problem number
-and title, the date I typed each prompt, at least one prompt I typed, and —
-where the first prompt did not get me what I needed — the follow-up prompt, with
-a one-line note on what was lacking. A short note on what Claude did follows
-each prompt. Sections are filled in as the assignment progresses; nothing is
-rewritten after the fact.
+**Convention — one section per problem.** Each section carries:
+
+1. the problem number and title;
+2. at least one prompt I typed, quoted verbatim in my own words, with the date;
+3. a follow-up prompt where the first one did not get me what I needed, with one
+   sentence on what was lacking after the first.
+
+A short note on what Claude did follows each prompt. Sections are numbered to
+match the problems in the assignment; everything typed before the problem list
+arrived sits in Problem 1 below. Sections are filled in as the assignment
+progresses, and nothing is rewritten after the fact.
 
 ---
 
@@ -103,3 +108,18 @@ recreated. It dated every entry (the follow-ups had carried only the note on
 what was lacking, not the date) and wrote the date into the convention at the
 top. From here each prompt is appended as it arrives, with its date and a note
 on what followed; nothing earlier is rewritten.
+
+**Follow-up prompt** — 2026-10-14 _(the previous prompt asked for the log but
+not for its shape — this one gave the required structure)_
+
+> In AI_prompts.md, add one section per problem. Each section should have The
+> problem number and title, At least one prompt you typed, in your own words as
+> much as possible, One follow-up prompt if you needed it (and one sentence on
+> what was lacking after the first)
+
+**What Claude did.** The file already worked this way, so it rewrote the
+convention at the top as the three numbered requirements rather than a
+paragraph, and said that section numbers track the assignment's problems. Only
+one section exists so far — the hw5 problem list has not arrived, so everything
+typed to this point is project setup. A new section goes in as each problem
+starts.
