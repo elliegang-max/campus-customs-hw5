@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from pydantic_ai import RunContext
 
-from .base import build_agent
+from . import audit
+
+from .base import build_agent, run_agent
 from .inventory import inventory_agent
 from .models import DraftReply, StockAssessment
 
@@ -28,8 +30,12 @@ async def ask_inventory(
         ticket_id: The ticket being answered.
         question: What you need to know before you can write the reply.
     """
-    result = await inventory_agent.run(
+    audit.append("delegation", requested_by="customer_service", asked="inventory",
+                 ticket_id=ticket_id, question=audit.summarise(question))
+    result = await run_agent(
+        inventory_agent,
         f"Ticket {ticket_id}. {question}",
         usage=ctx.usage,  # one budget for the whole team run
+        delegated_by="customer_service",
     )
     return result.output

@@ -32,6 +32,8 @@ hw5/
 │   └── prompts/        # one prompt per agent, plus _shared.md house rules
 ├── prompts/            # system / task prompts
 ├── scripts/reset_db.sh # restore the working db from the original
+├── scripts/approve.py  # the human's approval tool (agents cannot call it)
+├── scripts/mcp_smoke.py# tool-vs-database evidence
 ├── data/               # data pack (not committed)
 └── output/             # write-ups and generated artefacts
 ```
@@ -58,6 +60,16 @@ To start the tickets over from scratch:
 ./.venv/bin/python -m backend.run_board            # the whole board
 ./.venv/bin/python -m backend.run_board --ticket 102
 ```
+
+Agents can only *propose* payments. To approve one, as a person:
+
+```bash
+./.venv/bin/python scripts/approve.py --list
+./.venv/bin/python scripts/approve.py 2 --by "Your Name"
+```
+
+Then run the board again and the approved payment — and only that one — goes
+through. Every run appends to `output/audit_trail.json`.
 
 Nine tables — `desk`, `tickets`, `inventory`, `pricing`, `vendors`, `invoices`,
 `leases`, `cash_accounts`, `payments` — walked through in

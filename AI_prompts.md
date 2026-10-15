@@ -310,3 +310,54 @@ run worked out that the 264.00 restock plus the two obligations comes to 3504.00
 against 3400.00 in checking, 104.00 short, which the first run never reached. It
 also drew a distinction nobody asked for: 12 × 22.00 is arithmetic, not a vendor
 quote, because no quote exists in the database.
+
+---
+
+## Problem 3 — Write tools, approval, and the audit trail
+
+**Prompt** — 2026-10-14
+
+> Add any tools the agents need to your MCP server so they can work on the open
+> tickets. Shop facts come from the MCP server over data/campus_customs_new.db
+> — do not invent a second shop-tools layer that bypasses MCP. Wire the agents
+> so they append to output/audit_trail.json as they run: for each agent-loop
+> step, record enough to audit later. Append to this file — do not wipe it each
+> run. In output/harness.md, list each agent and each MCP tool (including ones
+> you add in this problem) along with which table the tool uses. Add a short
+> safety section, here's a guardrail i came up with: No payment executes without
+> explicit human approval. Agents can only propose a payment, and the pay tool
+> refuses if no approval is recorded. The pay tool refuses any payment that
+> would push a cash account below zero. Update mcp_server/README.md so the tool
+> list matches what you have now.
+
+**What Claude did.** Added six tools — `propose_payment`, `list_approvals`,
+`approve_payment`, `pay`, `record_draft_reply`, `resolve_ticket` — plus two
+tables (`approvals`, `drafts`) created on the working copy at first write, so a
+reset still gives a clean board. The guardrail is enforced in three places
+rather than in a prompt: `approve_payment` is filtered out of the agents'
+toolset so an agent cannot approve its own proposal, `pay` reads the approvals
+table at the moment of payment, and `pay` computes the remaining balance before
+writing. The human approves through `scripts/approve.py`, which goes through the
+same MCP server — no second path to the database for anyone. A `TestModel` run
+against a throwaway database confirmed the agents can reach eight of the nine
+tools and not `approve_payment`.
+
+The audit trail appends to a JSON array through a temp-file-and-rename, so an
+interrupted write cannot corrupt it, and records run, agent, delegation, and
+tool-call events with the errors kept rather than dropped.
+
+Running it end to end found four things worth fixing. Six drafts appeared for
+three tickets, because the Boss re-recorded what Customer Service had already
+written; nine proposals appeared for two obligations, because Accounting
+proposed on every pass. Both were fixed in the tools, not the prompts — a prompt
+that says "call this once" is a request, a tool that refuses is a guarantee. The
+disclosure rule from problem 2 regressed, with two drafts telling customers that
+the shop had an unpaid invoice, so that rule moved out of the Customer Service
+prompt and into the house rules every agent shares. And a run died on
+pydantic-ai's default 50-request limit inside a delegated agent, which the
+team's own shared budget has to be passed down to override.
+
+The approval loop then ran clean: pass 1 proposed two payments and paid nothing,
+a human approved the invoice only, and pass 2 paid exactly that one — 3400.00 →
+2560.00 — then refused the same payment on the retry and left the unapproved
+rent alone.

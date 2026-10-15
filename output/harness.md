@@ -547,3 +547,144 @@ The plan and the figures are otherwise unchanged: #501 then rent, 3400.00 →
 2560.00 → 160.00, nothing paid, all three tickets still needing a human. The
 database was untouched again: `payments` empty, invoice #501 `open`, checking
 3400.00, all tickets `open`.
+
+---
+
+## 4. Working the tickets: write tools, approval, and the audit trail
+
+Section 2's tools could only look. These let the team act — within limits the
+tools themselves enforce.
+
+### 4.1 The agents
+
+| Agent | What it owns | MCP tools it uses | Delegates to |
+|---|---|---|---|
+| **Boss** | triage, deciding, ordering, closing | `list_tickets`, `get_ticket`, `list_approvals`, `resolve_ticket` | all four specialists |
+| **Inventory** | stock, shortfalls, resupply | `get_ticket`, `get_vendor_status`, `list_tickets` | — |
+| **Accounting** | cash, invoices, proposing and paying | `get_ticket`, `get_vendor_status`, `list_tickets`, `list_approvals`, `propose_payment`, `pay` | — |
+| **Facilities** | leases, landlords, rent | `get_ticket`, `list_tickets` | — |
+| **Customer Service** | the reply to the requester | `get_ticket`, `list_tickets`, `record_draft_reply` | Inventory |
+
+No agent uses `approve_payment`. It is served by the same MCP server, but
+`backend/toolset.py` filters it out of the agents' view — they cannot call a
+tool they cannot see.
+
+### 4.2 Every MCP tool and the tables it touches
+
+Writes are marked **w**; everything else is a read. All nine read `desk` first,
+because every date judgement is made against the shop's date.
+
+| Tool | Tables | What it does |
+|---|---|---|
+| `list_tickets` | `desk`, `tickets` | the board, with the shop's date |
+| `get_ticket` | `desk`, `tickets`, `inventory`, `pricing`, `leases`, `invoices`, `vendors`, `cash_accounts` | one ticket with every link resolved |
+| `get_vendor_status` | `desk`, `vendors`, `invoices` | will a vendor ship, and how fast |
+| `list_approvals` | `desk`, `approvals` | every proposal and where it stands |
+| `propose_payment` | `desk`, `invoices`/`leases`, `cash_accounts`, **w** `approvals` | records a proposal; pays nothing |
+| `approve_payment` | `desk`, **w** `approvals` | **human only** — records a person's decision |
+| `pay` | `desk`, `approvals`, `invoices`/`leases`, `cash_accounts`, **w** `payments`, **w** `cash_accounts`, **w** `approvals`, **w** `invoices`/`leases` | the only tool that moves money |
+| `record_draft_reply` | `desk`, `tickets`, **w** `drafts` | pins a draft to the board; sends nothing |
+| `resolve_ticket` | `desk`, **w** `tickets` | closes a ticket with a note |
+
+`approvals` and `drafts` are not in the original pack. They are created on the
+working copy the first time something writes, so `reset_db.sh` wiping them is
+correct: a fresh board has no approvals and no drafts.
+
+### 4.3 Safety
+
+**The guardrail: no payment executes without explicit human approval. Agents can
+only propose; `pay` refuses when no approval is recorded, and refuses any
+payment that would push a cash account below zero.**
+
+How that is actually enforced, in order of how hard it is to get around:
+
+1. **The approving tool is not in the agents' toolset.** An agent cannot
+   approve its own proposal because `approve_payment` never appears in its tool
+   list. A person approves through `scripts/approve.py`, which calls the same
+   MCP server — there is no second path to the database for anyone.
+2. **`pay` checks the approvals table, not its instructions.** No approval row
+   at status `approved` for that exact kind, id and account, and it raises.
+   This is a database read at the moment of payment, so no amount of persuasion
+   in a prompt changes the answer.
+3. **One approval buys one payment.** Paying marks the approval `used`, so a
+   second attempt finds nothing approved. Two approvals for the same obligation
+   still cannot pay twice: `pay` checks the invoice's own status, and refuses
+   rent already paid today for that lease.
+4. **No negative balances.** `pay` computes the remaining balance before
+   writing and refuses when it would go below zero, naming the figure it
+   refused.
+5. **A payment is one transaction.** The payment row, the new balance, the
+   invoice marked paid (or the lease rolled on), and the approval marked used
+   all happen in a single connection — the gap §1.10 warned about is closed.
+6. **Reads cannot write.** Read tools open the file with `mode=ro`; SQLite
+   refuses a write on that connection.
+7. **Nothing leaves the building.** There is no tool that sends mail or calls a
+   vendor. `record_draft_reply` stores a draft with `sent` false, and that is
+   the only outbound path there is.
+
+Proven directly against the database, not by asking an agent nicely:
+
+| Attempt | Result |
+|---|---|
+| `pay` with no approval | refused — "no recorded human approval for invoice 501" |
+| `pay` while the proposal is only *proposed* | refused — "Proposal 1 is still awaiting a human decision" |
+| `pay` after a human approves | paid: 3400.00 → 2560.00, invoice marked paid, approval marked used |
+| `pay` the same invoice again | refused — the approval is spent and the invoice is no longer open |
+| `pay` rent of 2400.00 with 160.00 in the account | refused — "would leave -2240.00. Cash accounts may not go below zero." |
+
+### 4.4 The audit trail
+
+`output/audit_trail.json` — a JSON array that **grows**. Each run appends; the
+file is never truncated, so it holds every run this system has ever done.
+Writes go to a temporary file and are moved into place, so an interrupted write
+cannot leave the trail unparseable.
+
+Six record types, enough to reconstruct a run afterwards:
+
+| Event | Carries |
+|---|---|
+| `run_started` / `run_finished` | the instruction; then requests, tokens, tickets touched, or the error |
+| `agent_started` / `agent_finished` | which agent, **who delegated to it**, the prompt, the output, requests, tokens, duration |
+| `delegation` | who asked whom, about which ticket, and what was asked |
+| `tool_call` | the agent, the tool, the arguments, the result or the error, and the duration |
+
+Every record carries a `run_id` and a `seq`, so one run can be pulled out of the
+file and read in order. **Failures are recorded, not dropped** — the refused
+second payment in 4.5 is in the trail with its error text, which is exactly the
+kind of thing an audit exists to catch.
+
+### 4.5 The approval loop, end to end
+
+Three runs against one reset board.
+
+**Pass 1 — nothing is approved yet.** The team worked all three tickets, wrote
+one draft per ticket, and recorded exactly two proposals: rent 2400.00 and
+invoice #501 840.00. `payments` empty, cash 3400.00 untouched. Ending a pass
+with proposals and open tickets is the system working, not failing.
+
+**A human decides.** `scripts/approve.py 2 --by "Shutong Gang"` — approving the
+invoice only, leaving rent proposed.
+
+**Pass 2 — one approval exists.** Accounting called `pay` for invoice 501: paid,
+3400.00 → 2560.00, invoice marked paid, approval marked `used`, `approved_by`
+recorded as the human who signed it. It then called `pay` for the same invoice
+again and was **refused**. Rent, still only proposed, was not paid.
+
+That is the guardrail doing its job twice in one run: once by allowing exactly
+the payment a person authorised, and once by refusing the one they did not.
+
+### 4.6 Two faults the write tools exposed
+
+Both were the same shape — an agent calling a write tool more than once — and
+both were fixed in the tools rather than the prompts, because a prompt that
+says "call this once" is a request, while a tool that refuses is a guarantee.
+
+- **Six drafts for three tickets.** Customer Service recorded each draft, and
+  then the Boss recorded all three again. `record_draft_reply` now replaces the
+  live draft for a ticket instead of adding another; the Boss's prompt also now
+  says drafting is not its job.
+- **Nine proposals for two obligations.** Accounting proposed the same invoice
+  on every pass through. `propose_payment` now returns the existing pending
+  proposal instead of stacking duplicates. This one mattered: nine identical
+  approvals is a trap for whoever is approving, and approving two of them is two
+  payments.

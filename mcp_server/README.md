@@ -23,9 +23,24 @@ connection.
 
 ## The tools
 
-All three return the shop's own date (`today`, from the `desk` table) with their
-results. Overdue is always measured against that date, never the real-world
-clock.
+Nine tools in three groups. All of them read the shop's own date (`today`, from
+the `desk` table) first — overdue is always measured against that date, never
+the real-world clock.
+
+| Tool | Group | Tables |
+| --- | --- | --- |
+| `list_tickets` | read | `desk`, `tickets` |
+| `get_ticket` | read | `desk`, `tickets`, `inventory`, `pricing`, `leases`, `invoices`, `vendors`, `cash_accounts` |
+| `get_vendor_status` | read | `desk`, `vendors`, `invoices` |
+| `list_approvals` | read | `desk`, `approvals` |
+| `propose_payment` | agent write | writes `approvals` |
+| `record_draft_reply` | agent write | writes `drafts` |
+| `resolve_ticket` | agent write | writes `tickets` |
+| `pay` | **money** | writes `payments`, `cash_accounts`, `approvals`, `invoices`/`leases` |
+| `approve_payment` | **human only** | writes `approvals` |
+
+`approvals` and `drafts` are not in the original data pack; they are created on
+the working copy the first time something writes to it.
 
 ### `list_tickets(status="open")`
 
@@ -51,6 +66,70 @@ Whether a vendor will ship, and how long they take. `lead_days` is read from the
 `vendors` table, never assumed. `can_ship` is false while the vendor has any
 open unpaid invoice — the house rule that blocks restocks — and `blocked_reason`
 names the invoices responsible.
+
+### `list_approvals(status=None)`
+
+Every payment proposal and where it stands: `proposed`, `approved`, `declined`,
+or `used`.
+
+### `propose_payment(kind, ref_id, amount, reason, requested_by, account)`
+
+Records a payment an agent wants made, with `cash_before` and
+`cash_after_if_paid` so a human can decide from one read. **It pays nothing.**
+Proposing the same obligation twice returns the pending proposal rather than
+stacking duplicates.
+
+### `approve_payment(approval_id, approved_by, decision)`
+
+**The human's tool, and not in the agents' toolset.** Records a person's
+decision. Use it through `scripts/approve.py`:
+
+```bash
+./.venv/bin/python scripts/approve.py --list
+./.venv/bin/python scripts/approve.py 2 --by "Your Name"
+```
+
+A decision cannot be changed once recorded.
+
+### `pay(kind, ref_id, account)`
+
+The only tool that moves money, and it refuses more often than it agrees:
+
+- **no recorded approval** for exactly this payment → refused
+- the approval **has already been spent** → refused (one approval, one payment)
+- the invoice is already paid, or rent was already paid today → refused
+- the payment would take the account **below zero** → refused
+
+When it does pay, everything happens in one transaction: the `payments` row,
+the new balance, the invoice marked paid (or the lease's `next_due` rolled on),
+and the approval marked `used` with the approver's name.
+
+### `record_draft_reply(ticket_id, to_whom, subject, body, written_by)`
+
+Pins a draft to the board with `sent` false. **Nothing in this system sends
+mail.** Re-recording replaces the live draft for that ticket rather than adding
+a second copy.
+
+### `resolve_ticket(ticket_id, resolution, resolved_by)`
+
+Closes a ticket, appending what was done to its notes with the shop's date. A
+ticket waiting on an approval, a vendor, or a human judgement is not resolved.
+
+## The guardrail
+
+**No payment executes without explicit human approval.** Agents propose; `pay`
+refuses unless an approval is already recorded for that exact payment; and
+`pay` refuses anything that would push a cash account below zero.
+
+It holds because of where it lives, not because the prompts say so:
+
+- `approve_payment` is filtered out of the agents' toolset in
+  `backend/toolset.py` — an agent cannot approve its own proposal because it
+  cannot see the tool.
+- `pay` reads the `approvals` table at the moment of payment. Nothing an agent
+  says changes what is in that table.
+- Reads open the database `mode=ro`, so a look-only tool cannot write.
+- There is no tool that sends mail or contacts a vendor.
 
 ## Never inventing data
 
@@ -98,6 +177,5 @@ file location, so the working copy is found whatever directory the server is
 started in. Create the venv first (`.venv/` is not committed) — without it the
 command does not exist and the server will fail to start.
 
-The write tools (paying an invoice, paying rent, resolving a ticket), each
-behind human approval and each refusing to overdraw the account, come in later
-problems.
+Every agent in the team connects to this one server process. The audit trail of
+what they called is appended to `output/audit_trail.json`.

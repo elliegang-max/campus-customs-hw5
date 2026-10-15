@@ -14,10 +14,12 @@ budget rather than one per agent.
 from __future__ import annotations
 
 from pydantic_ai import RunContext
+
+from . import audit
 from pydantic_ai.usage import UsageLimits
 
 from .accounting import accounting_agent
-from .base import MAX_REQUESTS_PER_RUN, build_agent
+from .base import MAX_REQUESTS_PER_RUN, build_agent, run_agent
 from .customer_service import customer_service_agent
 from .facilities import facilities_agent
 from .inventory import inventory_agent
@@ -42,8 +44,11 @@ async def ask_inventory(
         ticket_id: The ticket this question is about.
         question: What you need to know. Be specific.
     """
-    result = await inventory_agent.run(
-        f"Ticket {ticket_id}. {question}", usage=ctx.usage
+    audit.append("delegation", requested_by="boss", asked="inventory",
+                 ticket_id=ticket_id, question=audit.summarise(question))
+    result = await run_agent(
+        inventory_agent, f"Ticket {ticket_id}. {question}",
+        usage=ctx.usage, delegated_by="boss",
     )
     return result.output
 
@@ -59,7 +64,11 @@ async def ask_accounting(
         ticket_id: The ticket this is about, if it is about one.
     """
     prefix = f"Ticket {ticket_id}. " if ticket_id is not None else ""
-    result = await accounting_agent.run(f"{prefix}{question}", usage=ctx.usage)
+    audit.append("delegation", requested_by="boss", asked="accounting",
+                 ticket_id=ticket_id, question=audit.summarise(question))
+    result = await run_agent(
+        accounting_agent, f"{prefix}{question}", usage=ctx.usage, delegated_by="boss"
+    )
     return result.output
 
 
@@ -73,8 +82,11 @@ async def ask_facilities(
         ticket_id: The ticket this question is about.
         question: What you need to know. Be specific.
     """
-    result = await facilities_agent.run(
-        f"Ticket {ticket_id}. {question}", usage=ctx.usage
+    audit.append("delegation", requested_by="boss", asked="facilities",
+                 ticket_id=ticket_id, question=audit.summarise(question))
+    result = await run_agent(
+        facilities_agent, f"Ticket {ticket_id}. {question}",
+        usage=ctx.usage, delegated_by="boss",
     )
     return result.output
 
@@ -90,8 +102,12 @@ async def ask_customer_service(
         what_to_say: The findings the reply must be built on — what is true,
             what cannot be promised, and anything the requester must be told.
     """
-    result = await customer_service_agent.run(
-        f"Draft the reply for ticket {ticket_id}. {what_to_say}", usage=ctx.usage
+    audit.append("delegation", requested_by="boss", asked="customer_service",
+                 ticket_id=ticket_id, question=audit.summarise(what_to_say))
+    result = await run_agent(
+        customer_service_agent,
+        f"Draft the reply for ticket {ticket_id}. {what_to_say}",
+        usage=ctx.usage, delegated_by="boss",
     )
     return result.output
 
@@ -109,9 +125,22 @@ async def review_board(instruction: str = DEFAULT_INSTRUCTION) -> BoardReview:
     Nothing here writes to the database or pays anything: the tools are
     read-only, and payments come back as `ApprovalRequest`s for a human.
     """
+    audit.append("run_started", instruction=audit.summarise(instruction))
     async with boss_agent:  # opens the shared MCP server once for the whole run
-        result = await boss_agent.run(
-            instruction,
-            usage_limits=UsageLimits(request_limit=MAX_REQUESTS_PER_RUN),
-        )
+        try:
+            result = await boss_agent.run(
+                instruction,
+                usage_limits=UsageLimits(request_limit=MAX_REQUESTS_PER_RUN),
+            )
+        except Exception as exc:
+            audit.append("run_finished", ok=False, error=f"{type(exc).__name__}: {exc}")
+            raise
+
+    audit.append(
+        "run_finished",
+        ok=True,
+        requests=result.usage.requests,
+        tokens=result.usage.total_tokens,
+        tickets=[o.ticket_id for o in result.output.outcomes],
+    )
     return result.output

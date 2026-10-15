@@ -1,0 +1,101 @@
+{
+  "shop_date": "2026-08-31",
+  "cash_available": 2560.0,
+  "outcomes": [
+    {
+      "ticket_id": 101,
+      "kind": "customer_order",
+      "requester": "Tauhid Zaman",
+      "delegated_to": [
+        "inventory",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "Size S is out of stock (0 on hand). Bulldog Print Co has no unpaid invoices and reports earliest availability 2026-09-05 if ordered today; that is not a guaranteed date. Invoice 501 ($840) is already paid. Customer Service drafted a reply saying the order is delayed and no date is available.",
+      "recommended_action": "Leave open while restock/order fulfillment remains outstanding; do not promise a date. Draft reply is on the board and unsent.",
+      "needs_human": false,
+      "approval_requests": [],
+      "draft_reply": {
+        "ticket_id": 101,
+        "to": "Tauhid Zaman",
+        "subject": "Re: Bulldog tee",
+        "body": "Hi Tauhid,\n\nThe Classic Bulldog Tee in size S is out of stock, so your order is delayed. We don\u2019t have a restock date to share yet.\n\nSorry for the wait,\nCampus Customs",
+        "promises_made": [],
+        "sent": false
+      },
+      "resolved": false
+    },
+    {
+      "ticket_id": 102,
+      "kind": "rent_notice",
+      "requester": "Elm City Properties",
+      "delegated_to": [
+        "facilities",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "Lease 1 rent is $2,400 due 2026-09-02. Checking is $2,560 after invoice 501 was paid. A rent proposal exists and remains proposed; it is not paid. Customer Service drafted a notice acknowledging the due date.",
+      "recommended_action": "Keep open pending human approval and payment of the existing rent proposal. Pay rent first if approved; this leaves $160. Do not mark paid or resolve before payment.",
+      "needs_human": true,
+      "approval_requests": [
+        {
+          "kind": "rent",
+          "ref_id": 1,
+          "payee": "Elm City Properties",
+          "amount": 2400.0,
+          "account": "checking",
+          "reason": "Rent for the Chapel Street shop is due 2026-09-02; pay before any discretionary restock spending.",
+          "cash_before": 2560.0,
+          "cash_after": 160.0,
+          "unblocks": [
+            102
+          ],
+          "urgency": "due_soon",
+          "approved": null
+        }
+      ],
+      "draft_reply": {
+        "ticket_id": 102,
+        "to": "Elm City Properties",
+        "subject": "Rent due September 2",
+        "body": "Hello Elm City Properties,\n\nWe have noted that rent for the Chapel Street shop is due on September 2, 2026.\n\nBest,\nCampus Customs",
+        "promises_made": [
+          "Rent for the Chapel Street shop is due on September 2, 2026."
+        ],
+        "sent": false
+      },
+      "resolved": false
+    },
+    {
+      "ticket_id": 103,
+      "kind": "price_override",
+      "requester": "Yale AI Club",
+      "delegated_to": [
+        "inventory",
+        "accounting",
+        "customer_service"
+      ],
+      "finding": "There are 8 of 20 requested size M hoodies on hand, so 12 are short. Restocking 12 at the established unit cost of $22 totals $264; it does not fit after rent, which would leave $160. Vendor reports earliest availability 2026-09-05 if ordered today, not a guaranteed date. Discount requires a human decision. Draft reply says 8 are available, remaining stock is delayed with no date, and pricing is under review.",
+      "recommended_action": "Leave open pending a human price/discount decision and a feasible restock/order decision. Do not promise a discount or restock date; no restock payment is proposed because it is unaffordable after rent.",
+      "needs_human": true,
+      "approval_requests": [],
+      "draft_reply": {
+        "ticket_id": 103,
+        "to": "Yale AI Club",
+        "subject": "Re: Bulk hoodie discount",
+        "body": "Hi Yale AI Club,\n\nWe have 8 of the 20 size M navy hoodies available now. The remaining 12 are delayed, and we do not have a date yet. We\u2019ve noted your request for a bulk discount; pricing is still under review, so we can\u2019t confirm a discount at this time.\n\nBest,\nCampus Customs",
+        "promises_made": [
+          "8 size M navy hoodies are available now"
+        ],
+        "sent": false
+      },
+      "resolved": false
+    }
+  ],
+  "spending_plan": [
+    "Invoice 501 ($840) is already paid from checking; do not pay it again. Starting current balance: $2,560.",
+    "If the existing rent proposal is approved, pay lease 1 rent ($2,400) next; checking would go from $2,560 to $160.",
+    "Do not order the 12-unit hoodie shortfall at the established total cost of $264 while this would overdraw checking after rent; no restock payment proposal exists."
+  ],
+  "summary": "Shop date is 2026-08-31. Invoice 501 has already been paid, leaving checking at $2,560. The existing $2,400 rent proposal is still awaiting human approval; if approved and paid, $160 remains. Ticket 101 awaits restock/fulfillment; ticket 102 awaits approval/payment; ticket 103 awaits human pricing judgment and a viable restock plan. Draft replies are recorded but unsent."
+}
